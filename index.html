@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klassrumsskärm ✨</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #background-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: -1;
+            transition: background-image 0.5s ease;
+            background-image: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
+        }
+
+        /* Widget Container */
+        .widget {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            padding: 10px;
+            min-width: 120px;
+            min-height: 80px;
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+            container-type: size;
+            border: 2px solid transparent;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.3s;
+        }
+
+        .widget.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), 0 12px 40px rgba(0,0,0,0.2);
+        }
+
+        /* Flytande verktygsrad */
+        .widget-toolbar {
+            position: absolute;
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 5px 12px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .widget.active .widget-toolbar {
+            display: flex;
+        }
+
+        .toolbar-btn {
+            color: #555;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toolbar-btn:hover { color: #000; }
+        .toolbar-btn.delete:hover { color: #ef4444; }
+
+        /* Inställningsmeny för färg */
+        .settings-popover {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            padding: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 1001;
+        }
+        .settings-popover.show { display: flex; }
+        .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .color-option { 
+            width: 24px; height: 24px; border-radius: 50%; border: 1px solid #ddd; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; font-size: 10px;
+        }
+
+        .widget-body {
+            flex-grow: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .resize-handle {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 20px;
+            height: 20px;
+            cursor: nwse-resize;
+            z-index: 100;
+        }
+        
+        /* Skalningslogik */
+        .clock-display { font-size: 25cqmin; font-weight: 800; line-height: 1; text-align: center; }
+        .analog-clock-wrapper { width: 92cqmin; height: 92cqmin; position: relative; }
+        .analog-clock { width: 100%; height: 100%; border: 1.8cqmin solid #333; border-radius: 50%; background: white; position: relative; }
+        .clock-face-number { position: absolute; width: 100%; height: 100%; text-align: center; font-weight: 800; font-size: 8.5cqmin; padding: 12cqmin; color: #333; }
+        .tick-mark { display: inline-block; width: 0.5cqmin; height: 3.5cqmin; background: #bbb; }
+        .tick-mark.hour { width: 1cqmin; height: 6cqmin; background: #333; }
+        .clock-center { width: 4.5cqmin; height: 4.5cqmin; background: #333; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; }
+        .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom center; border-radius: 2cqmin; z-index: 5; }
+        .hour-hand { width: 2cqmin; height: 28%; background: #333; }
+        .min-hand { width: 1.4cqmin; height: 40%; background: #666; }
+        .sec-hand { width: 0.6cqmin; height: 44%; background: #e53e3e; }
+
+        .visual-timer-circle {
+            width: 88cqmin; height: 88cqmin; border-radius: 50%;
+            background: conic-gradient(#f56565 var(--progress), #edf2f7 0);
+            position: relative; display: flex; align-items: center; justify-content: center;
+        }
+        .visual-timer-circle::after { content: ''; position: absolute; top: 3.5%; left: 3.5%; right: 3.5%; bottom: 3.5%; background: white; border-radius: 50%; z-index: 10; }
+        .timer-display { font-size: 22cqmin; font-weight: 800; color: #1a202c; position: relative; z-index: 20; }
+
+        .symbol-widget-content { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .symbol-widget-content i { font-size: 45cqmin; color: #2d3748; }
+        .symbol-widget-content p { font-weight: 800; font-size: 10cqmin; margin-top: 2cqmin; text-transform: uppercase; color: #4a5568; }
+
+        .schedule-item { position: relative; width: 100%; padding: 12px; margin-bottom: 3cqmin; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .schedule-item .time-start { position: absolute; top: 6px; left: 10px; font-size: 0.7rem; font-weight: 700; opacity: 0.7; }
+        .schedule-item .time-end { position: absolute; bottom: 6px; right: 10px; font-size: 0.7rem; font-weight: 700; opacity: 0.7; }
+        .schedule-item .subject { font-weight: 800; font-size: 1.1rem; text-align: center; }
+
+        /* Bottenmeny */
+        #bottom-nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(15px);
+            padding: 10px 24px;
+            border-radius: 24px;
+            display: flex;
+            gap: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 12px;
+            transition: all 0.2s;
+            color: #444;
+            min-width: 65px;
+        }
+        .nav-item:hover { background: rgba(0,0,0,0.05); transform: translateY(-3px); }
+        .nav-item i { font-size: 1.2rem; }
+        .nav-item span { font-size: 0.65rem; font-weight: 700; }
+
+        #status-msg { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; padding: 10px 20px; border-radius: 10px; display: none; font-size: 0.85rem; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <div id="status-msg"></div>
+    <div id="background-layer"></div>
+    <div id="app-canvas" class="w-full h-full relative"></div>
+
+    <nav id="bottom-nav">
+        <div class="nav-item" onclick="createWidget('background')"><i class="fas fa-image"></i><span>Bakgrund</span></div>
+        <div class="nav-item" onclick="createWidget('clock')"><i class="fas fa-clock"></i><span>Klocka</span></div>
+        <div class="nav-item" onclick="createWidget('timer')"><i class="fas fa-hourglass-half"></i><span>Timer</span></div>
+        <div class="nav-item" onclick="createWidget('sound')"><i class="fas fa-microphone-alt"></i><span>Ljudnivå</span></div>
+        <div class="nav-item" onclick="createWidget('text')"><i class="fas fa-align-left"></i><span>Anteckningar</span></div>
+        
+        <div class="nav-item" onclick="toggleSymbolMenu(event)">
+            <i class="fas fa-comment-dots"></i>
+            <span>Symboler</span>
+            <div id="symbol-submenu" class="hidden absolute bottom-20 bg-white p-3 rounded-2xl shadow-2xl grid grid-cols-2 gap-3 min-w-[200px]">
+                <div class="p-3 hover:bg-gray-100 rounded-xl text-center cursor-pointer" onclick="createSymbolWidget('tyst', 'fa-volume-mute', 'Tyst')"><i class="fas fa-volume-mute text-xl mb-1"></i><div class="text-[0.65rem] font-bold">Tyst</div></div>
+                <div class="p-3 hover:bg-gray-100 rounded-xl text-center cursor-pointer" onclick="createSymbolWidget('viska', 'fa-comment', 'Viska')"><i class="fas fa-comment text-xl mb-1"></i><div class="text-[0.65rem] font-bold">Viska</div></div>
+                <div class="p-3 hover:bg-gray-100 rounded-xl text-center cursor-pointer" onclick="createSymbolWidget('granne', 'fa-user-friends', 'Prata granne')"><i class="fas fa-user-friends text-xl mb-1"></i><div class="text-[0.65rem] font-bold">Granne</div></div>
+                <div class="p-3 hover:bg-gray-100 rounded-xl text-center cursor-pointer" onclick="createSymbolWidget('grupp', 'fa-users', 'Grupparbete')"><i class="fas fa-users text-xl mb-1"></i><div class="text-[0.65rem] font-bold">Grupp</div></div>
+            </div>
+        </div>
+        
+        <div class="nav-item" onclick="createWidget('schedule')"><i class="fas fa-calendar-alt"></i><span>Schema</span></div>
+        
+        <div class="nav-item text-green-600 border-l pl-4 ml-2" onclick="exportLayoutToFile()"><i class="fas fa-file-download"></i><span>Spara</span></div>
+        <div class="nav-item text-blue-600" onclick="document.getElementById('import-file-input').click()"><i class="fas fa-file-upload"></i><span>Öppna</span><input type="file" id="import-file-input" class="hidden" accept=".json" onchange="importLayoutFromFile(this)"></div>
+    </nav>
+
+    <script>
+        const canvas = document.getElementById('app-canvas');
+        let zIndexCounter = 10;
+        let widgetCount = 0;
+        let activeWidget = null;
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.target === canvas) {
+                clearActiveWidget();
+                closeAllSettings();
+            }
+        });
+
+        function clearActiveWidget() {
+            if (activeWidget) activeWidget.classList.remove('active');
+            activeWidget = null;
+        }
+
+        function closeAllSettings() {
+            document.querySelectorAll('.settings-popover').forEach(p => p.classList.remove('show'));
+        }
+
+        function setActiveWidget(el) {
+            if (activeWidget !== el) {
+                clearActiveWidget();
+                activeWidget = el;
+                activeWidget.classList.add('active');
+                activeWidget.style.zIndex = ++zIndexCounter;
+            }
+        }
+
+        function toggleSettingsMenu(e, id) {
+            e.stopPropagation();
+            const popover = document.querySelector(`#${id} .settings-popover`);
+            const isShown = popover.classList.contains('show');
+            closeAllSettings();
+            if (!isShown) popover.classList.add('show');
+        }
+
+        function setWidgetBackground(id, color) {
+            const w = document.getElementById(id);
+            if (color === 'transparent') {
+                w.style.background = 'transparent';
+                w.style.backdropFilter = 'none';
+                w.style.boxShadow = 'none';
+            } else {
+                w.style.background = color;
+                w.style.backdropFilter = 'blur(10px)';
+                w.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.15)';
+            }
+            w.setAttribute('data-bg', color);
+            closeAllSettings();
+        }
+
+        function makeDraggableAndResizable(el) {
+            const handle = el.querySelector('.resize-handle');
+            let isDragging = false, isResizing = false;
+            let startX, startY, startWidth, startHeight;
+
+            el.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.no-drag') || e.target.closest('.toolbar-btn') || e.target.closest('.settings-popover')) return;
+                setActiveWidget(el);
+                isDragging = true;
+                startX = e.clientX - el.offsetLeft;
+                startY = e.clientY - el.offsetTop;
+                const onMove = (e) => {
+                    if (isDragging) {
+                        el.style.left = (e.clientX - startX) + 'px';
+                        el.style.top = (e.clientY - startY) + 'px';
+                    }
+                };
+                const endMove = () => {
+                    isDragging = false;
+                    document.removeEventListener('mousemove', onMove);
+                    document.removeEventListener('mouseup', endMove);
+                };
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('mouseup', endMove);
+            });
+
+            handle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                setActiveWidget(el);
+                isResizing = true;
+                startX = e.clientX; startY = e.clientY;
+                startWidth = el.offsetWidth; startHeight = el.offsetHeight;
+                const onResize = (e) => {
+                    if (isResizing) {
+                        el.style.width = Math.max(120, startWidth + (e.clientX - startX)) + 'px';
+                        el.style.height = Math.max(80, startHeight + (e.clientY - startY)) + 'px';
+                    }
+                };
+                const endResize = () => {
+                    isResizing = false;
+                    document.removeEventListener('mousemove', onResize);
+                    document.removeEventListener('mouseup', endResize);
+                };
+                document.addEventListener('mousemove', onResize);
+                document.addEventListener('mouseup', endResize);
+            });
+        }
+
+        function toggleSymbolMenu(e) { e.stopPropagation(); document.getElementById('symbol-submenu').classList.toggle('hidden'); }
+        document.addEventListener('click', () => { document.getElementById('symbol-submenu').classList.add('hidden'); });
+
+        function createWidget(type, customContent = null, customTitle = null, existingId = null) {
+            const id = existingId || `w-${type}-${++widgetCount}`;
+            const widget = document.createElement('div');
+            widget.className = 'widget';
+            widget.id = id;
+            widget.setAttribute('data-type', type);
+            widget.style.top = (80 + (widgetCount % 10) * 30) + 'px';
+            widget.style.left = (80 + (widgetCount % 10) * 30) + 'px';
+            widget.style.width = type === 'clock' || type === 'timer' ? '280px' : '220px';
+            widget.style.height = type === 'clock' || type === 'timer' ? '300px' : '240px';
+            
+            let bodyHTML = '';
+            let toolbarExtra = '';
+
+            switch(type) {
+                case 'clock':
+                    toolbarExtra = `
+                        <div class="toolbar-btn text-[0.6rem] font-bold px-2 py-1 bg-gray-100 rounded-full hover:bg-blue-100" onclick="setClockMode('${id}', 'digital')">DIGI</div>
+                        <div class="toolbar-btn text-[0.6rem] font-bold px-2 py-1 bg-gray-100 rounded-full hover:bg-blue-100" onclick="setClockMode('${id}', 'analog')">ANA</div>
+                    `;
+                    bodyHTML = `
+                        <div class="widget-body">
+                            <div id="${id}-dig" class="clock-display">00:00:00</div>
+                            <div id="${id}-ana" class="hidden w-full h-full flex items-center justify-center">
+                                <div class="analog-clock-wrapper"><div class="analog-clock" id="${id}-face"></div></div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'timer':
+                    bodyHTML = `
+                        <div class="widget-body">
+                            <div class="visual-timer-circle" id="${id}-visual" style="--progress: 100%"><div class="timer-display" id="${id}-txt">10:00</div></div>
+                        </div>
+                        <div class="flex gap-2 mt-2 flex-shrink-0 justify-center no-drag">
+                            <input type="number" id="${id}-input" value="10" class="w-12 p-1 border rounded text-xs text-center">
+                            <button onclick="startTimer('${id}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-xs"><i class="fas fa-play"></i></button>
+                            <button onclick="resetTimer('${id}')" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-xs"><i class="fas fa-redo"></i></button>
+                        </div>
+                    `;
+                    break;
+                case 'symbol':
+                    bodyHTML = `<div class="widget-body"><div class="symbol-widget-content">${customContent}</div></div>`;
+                    break;
+                case 'schedule':
+                    bodyHTML = `
+                        <div id="list-${id}" class="widget-body space-y-2 mb-2 overflow-y-auto block w-full no-drag"></div>
+                        <div class="border-t pt-2 space-y-1 flex-shrink-0 w-full no-drag">
+                            <input type="text" id="subj-${id}" placeholder="Ämne..." class="w-full p-1 border rounded text-[0.65rem]">
+                            <div class="flex gap-1">
+                                <input type="text" id="start-${id}" placeholder="08.10" class="w-1/2 p-1 border rounded text-[0.65rem]">
+                                <input type="text" id="end-${id}" placeholder="09.00" class="w-1/2 p-1 border rounded text-[0.65rem]">
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <input type="color" id="clr-${id}" value="#ffeb3b" class="w-6 h-6 border-none bg-transparent cursor-pointer">
+                                <button onclick="addScheduleItem('${id}')" class="flex-1 bg-black text-white p-1 rounded-lg text-[0.65rem] font-bold">+ LÄGG TILL</button>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'background':
+                    bodyHTML = `<div class="widget-body"><button onclick="document.getElementById('bg-in-${id}').click()" class="bg-blue-50 text-blue-600 border border-blue-200 p-4 rounded-xl text-xs font-bold w-full hover:bg-blue-100 transition-colors">VÄLJ BILD FRÅN DATORN</button><input type="file" id="bg-in-${id}" class="hidden" accept="image/*" onchange="handleLocalImg(this)"></div>`;
+                    break;
+                case 'text':
+                    bodyHTML = `<div class="widget-body h-full no-drag"><textarea id="tx-${id}" class="w-full h-full p-2 bg-transparent border-none resize-none focus:outline-none text-gray-800" placeholder="Skriv anteckningar här..."></textarea></div>`;
+                    break;
+                case 'sound':
+                    bodyHTML = `
+                        <div class="widget-body">
+                            <div class="w-full bg-gray-100 h-4 rounded-full overflow-hidden mb-3"><div id="sf-${id}" class="h-full bg-gradient-to-r from-green-400 to-red-500 w-0 transition-all"></div></div>
+                            <button onclick="toggleMic('${id}')" class="w-full bg-gray-900 text-white p-2 rounded-xl text-[0.7rem] font-bold">MIKROFON</button>
+                        </div>
+                    `;
+                    break;
+            }
+
+            widget.innerHTML = `
+                <div class="widget-toolbar">
+                    ${toolbarExtra}
+                    <div class="toolbar-btn" onclick="toggleSettingsMenu(event, '${id}')"><i class="fas fa-ellipsis-v"></i></div>
+                    <div class="toolbar-btn delete" onclick="removeWidget('${id}')"><i class="fas fa-trash"></i></div>
+                    <div class="settings-popover">
+                        <div class="text-[0.6rem] font-bold text-gray-400 mb-1">BAKGRUND</div>
+                        <div class="color-grid">
+                            <div class="color-option" style="background: rgba(255,255,255,0.92)" onclick="setWidgetBackground('${id}', 'rgba(255,255,255,0.92)')"></div>
+                            <div class="color-option" style="background: transparent" onclick="setWidgetBackground('${id}', 'transparent')"><i class="fas fa-slash"></i></div>
+                            <div class="color-option" style="background: rgba(235, 248, 255, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(235, 248, 255, 0.9)')"></div>
+                            <div class="color-option" style="background: rgba(240, 255, 244, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(240, 255, 244, 0.9)')"></div>
+                            <div class="color-option" style="background: rgba(255, 255, 240, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(255, 255, 240, 0.9)')"></div>
+                            <div class="color-option" style="background: rgba(255, 245, 245, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(255, 245, 245, 0.9)')"></div>
+                            <div class="color-option" style="background: rgba(250, 245, 255, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(250, 245, 255, 0.9)')"></div>
+                            <div class="color-option" style="background: rgba(45, 55, 72, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(45, 55, 72, 0.9)')"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="widget-body">${bodyHTML}</div>
+                <div class="resize-handle"></div>
+            `;
+            canvas.appendChild(widget);
+            makeDraggableAndResizable(widget);
+            if (type === 'clock') initClock(id);
+            setActiveWidget(widget);
+            return widget;
+        }
+
+        function initClock(id) {
+            const face = document.getElementById(`${id}-face`);
+            if(!face) return;
+            face.innerHTML = '<div class="clock-center"></div><div class="hand hour-hand"></div><div class="hand min-hand"></div><div class="hand sec-hand"></div>';
+            for (let i = 0; i < 60; i++) {
+                const t = document.createElement('div'); t.className = 'absolute w-full h-full text-center'; t.style.transform = `rotate(${i*6}deg)`;
+                const m = document.createElement('div'); m.className = i % 5 === 0 ? 'tick-mark hour' : 'tick-mark';
+                t.appendChild(m); face.appendChild(t);
+            }
+            for (let i = 1; i <= 12; i++) {
+                const n = document.createElement('div'); n.className = 'clock-face-number'; n.style.transform = `rotate(${i*30}deg)`;
+                const s = document.createElement('span'); s.innerText = i; s.className = 'inline-block'; s.style.transform = `rotate(-${i*30}deg)`;
+                n.appendChild(s); face.appendChild(n);
+            }
+            const w = document.getElementById(id);
+            w.interval = setInterval(() => {
+                const now = new Date();
+                const d = document.getElementById(`${id}-dig`); if(d) d.innerText = now.toLocaleTimeString('sv-SE');
+                const h = w.querySelector('.hour-hand'), m = w.querySelector('.min-hand'), s = w.querySelector('.sec-hand');
+                if(h){
+                    h.style.transform = `translateX(-50%) rotate(${(now.getHours()%12)*30 + now.getMinutes()*0.5}deg)`;
+                    m.style.transform = `translateX(-50%) rotate(${now.getMinutes()*6 + now.getSeconds()*0.1}deg)`;
+                    s.style.transform = `translateX(-50%) rotate(${now.getSeconds()*6}deg)`;
+                }
+            }, 1000);
+        }
+
+        function setClockMode(id, mode) {
+            const w = document.getElementById(id);
+            w.setAttribute('data-mode', mode);
+            const d = document.getElementById(`${id}-dig`), a = document.getElementById(`${id}-ana`);
+            if(mode==='digital'){ d.classList.remove('hidden'); a.classList.add('hidden'); }
+            else { d.classList.add('hidden'); a.classList.remove('hidden'); }
+        }
+
+        function startTimer(id) {
+            const w = document.getElementById(id);
+            if(w.interval) clearInterval(w.interval);
+            const input = document.getElementById(`${id}-input`);
+            let total = parseInt(input.value) * 60;
+            let left = total;
+            w.interval = setInterval(() => {
+                left--;
+                const mins = Math.floor(left/60), secs = left%60;
+                const txt = document.getElementById(`${id}-txt`);
+                if(txt) txt.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+                const vis = document.getElementById(`${id}-visual`);
+                if(vis) vis.style.setProperty('--progress', `${(left/total)*100}%`);
+                if(left<=0) { clearInterval(w.interval); showStatus("Tiden är ute!", "success"); }
+            }, 1000);
+        }
+
+        function resetTimer(id) {
+            const w = document.getElementById(id);
+            if(w.interval) clearInterval(w.interval);
+            const val = document.getElementById(`${id}-input`).value;
+            document.getElementById(`${id}-txt`).innerText = `${val}:00`;
+            document.getElementById(`${id}-visual`).style.setProperty('--progress', '100%');
+        }
+
+        function addScheduleItem(id) {
+            const subj = document.getElementById(`subj-${id}`).value;
+            const start = document.getElementById(`start-${id}`).value;
+            const end = document.getElementById(`end-${id}`).value;
+            const clr = document.getElementById(`clr-${id}`).value;
+            if (!subj) return;
+            const list = document.getElementById(`list-${id}`);
+            const item = document.createElement('div');
+            item.className = 'schedule-item';
+            item.style.backgroundColor = clr;
+            item.innerHTML = `<span class="absolute top-1 right-1 cursor-pointer opacity-30 hover:opacity-100" onclick="this.parentElement.remove()"><i class="fas fa-times-circle"></i></span><span class="time-start">${start}</span><span class="subject">${subj}</span><span class="time-end">${end}</span>`;
+            list.appendChild(item);
+            document.getElementById(`subj-${id}`).value = '';
+        }
+
+        function createSymbolWidget(typeId, icon, label) {
+            const content = `<i class="fas ${icon}"></i><p>${label}</p>`;
+            createWidget('symbol', content, label.toUpperCase());
+        }
+
+        function removeWidget(id) {
+            const w = document.getElementById(id);
+            if (w.interval) clearInterval(w.interval);
+            if (w.micStream) w.micStream.getTracks().forEach(t => t.stop());
+            w.remove();
+            if (activeWidget === w) activeWidget = null;
+        }
+
+        async function toggleMic(id) {
+            const w = document.getElementById(id);
+            const b = w.querySelector(`button`);
+            if(w.micStream) {
+                w.micStream.getTracks().forEach(t => t.stop());
+                w.micStream = null; b.innerText = "MIKROFON"; b.classList.replace('bg-red-500', 'bg-gray-900');
+                document.getElementById(`sf-${id}`).style.width = '0%'; return;
+            }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                w.micStream = stream;
+                const ctx = new AudioContext(), ana = ctx.createAnalyser();
+                ctx.createMediaStreamSource(stream).connect(ana);
+                b.classList.replace('bg-gray-900', 'bg-red-500');
+                const update = () => {
+                    if(!w.micStream) return;
+                    const d = new Uint8Array(ana.frequencyBinCount); ana.getByteFrequencyData(d);
+                    const avg = d.reduce((a,b)=>a+b)/d.length;
+                    document.getElementById(`sf-${id}`).style.width = Math.min(avg*2.5, 100) + "%";
+                    requestAnimationFrame(update);
+                }; update();
+            } catch(e) { showStatus("Mikrofonåtkomst krävs.", "error"); }
+        }
+
+        function exportLayoutToFile() {
+            const widgets = [];
+            document.querySelectorAll('.widget').forEach(w => {
+                const type = w.getAttribute('data-type');
+                const id = w.id;
+                const state = { id, type, top: w.style.top, left: w.style.left, width: w.style.width, height: w.style.height, data: {} };
+                if (type === 'text') state.data.text = document.getElementById(`tx-${id}`).value;
+                if (type === 'schedule') {
+                    state.data.items = Array.from(w.querySelectorAll('.schedule-item')).map(i => ({
+                        subj: i.querySelector('.subject').innerText, start: i.querySelector('.time-start').innerText,
+                        end: i.querySelector('.time-end').innerText, clr: i.style.backgroundColor
+                    }));
+                }
+                if (type === 'symbol') { state.data.html = w.querySelector('.symbol-widget-content').innerHTML; }
+                if (type === 'clock') state.data.mode = w.getAttribute('data-mode') || 'digital';
+                state.backgroundColor = w.getAttribute('data-bg') || 'rgba(255,255,255,0.92)';
+                widgets.push(state);
+            });
+            const blob = new Blob([JSON.stringify({ background: document.getElementById('background-layer').style.backgroundImage, widgets }, null, 2)], { type: "application/json" });
+            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `layout-${new Date().toISOString().slice(0,10)}.json`; a.click();
+        }
+
+        function importLayoutFromFile(input) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = JSON.parse(e.target.result);
+                document.querySelectorAll('.widget').forEach(w => removeWidget(w.id));
+                if (data.background) document.getElementById('background-layer').style.backgroundImage = data.background;
+                data.widgets.forEach(s => {
+                    const w = createWidget(s.type, null, null, s.id);
+                    w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
+                    if (s.backgroundColor) setWidgetBackground(s.id, s.backgroundColor);
+                    if (s.type === 'text') {
+                        const tx = document.getElementById(`tx-${s.id}`);
+                        if(tx) tx.value = s.data.text || '';
+                    }
+                    if (s.type === 'schedule' && s.data.items) {
+                        const list = document.getElementById(`list-${s.id}`);
+                        s.data.items.forEach(item => {
+                            const div = document.createElement('div'); div.className = 'schedule-item'; div.style.backgroundColor = item.clr;
+                            div.innerHTML = `<span class="absolute top-1 right-1 cursor-pointer opacity-30 hover:opacity-100" onclick="this.parentElement.remove()"><i class="fas fa-times-circle"></i></span><span class="time-start">${item.start}</span><span class="subject">${item.subj}</span><span class="time-end">${item.end}</span>`;
+                            list.appendChild(div);
+                        });
+                    }
+                    if (s.type === 'symbol') { w.querySelector('.symbol-widget-content').innerHTML = s.data.html; }
+                    if (s.type === 'clock') setClockMode(s.id, s.data.mode || 'digital');
+                });
+                showStatus("Layout laddad!");
+            };
+            reader.readAsText(input.files[0]);
+        }
+
+        function showStatus(m, t='info') { const e=document.getElementById('status-msg'); e.innerText=m; e.style.display='block'; e.style.backgroundColor=t==='success'?'#c6f6d5':(t==='error'?'#fed7d7':'#e6fffa'); setTimeout(()=>e.style.display='none',3000); }
+        function handleLocalImg(i) { const f=i.files[0]; if(f){ const r=new FileReader(); r.onload=(e)=>document.getElementById('background-layer').style.backgroundImage=`url('${e.target.result}')`; r.readAsDataURL(f); } }
+
+        window.onload = () => { createWidget('clock'); };
+    </script>
+</body>
+</html>
