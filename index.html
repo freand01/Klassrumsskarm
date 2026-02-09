@@ -48,44 +48,27 @@
             container-type: size;
             border: 2px solid transparent;
             transition: border-color 0.2s, box-shadow 0.2s, background 0.3s;
-            /* Viktigt: Inte overflow hidden här, annars klipps toolbaren */
         }
 
-        /* Specialstil för video: Lite mindre padding men med en drag-list */
-        .widget[data-type="video"] {
-            padding: 0; 
-            resize: both;
-            /* Vi använder en inre container för overflow istället */
-        }
-        
-        /* Se till att resize-handtaget syns ovanpå videon */
-        .widget[data-type="video"] .resize-handle {
-            background: linear-gradient(135deg, transparent 50%, rgba(255,255,255,0.8) 50%);
-            z-index: 50;
-            bottom: 2px;
-            right: 2px;
-        }
-        
         .widget.active {
             border-color: #3b82f6;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), 0 12px 40px rgba(0,0,0,0.2);
-            z-index: 1000; /* Se till att aktiv alltid är överst */
         }
 
         /* Flytande verktygsrad */
         .widget-toolbar {
             position: absolute;
-            top: -50px; /* Flyttad lite högre upp */
+            top: -45px;
             left: 50%;
             transform: translateX(-50%);
             background: white;
-            padding: 6px 14px;
+            padding: 5px 12px;
             border-radius: 30px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             display: none;
             align-items: center;
             gap: 12px;
-            z-index: 2000;
+            z-index: 1000;
             white-space: nowrap;
         }
 
@@ -96,7 +79,7 @@
         .toolbar-btn {
             color: #555;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: color 0.2s;
             display: flex;
             align-items: center;
@@ -109,7 +92,7 @@
         /* Inställningsmeny för färg */
         .settings-popover {
             position: absolute;
-            top: 45px;
+            top: 40px;
             left: 50%;
             transform: translateX(-50%);
             background: white;
@@ -119,7 +102,7 @@
             display: none;
             flex-direction: column;
             gap: 8px;
-            z-index: 2001;
+            z-index: 1001;
         }
         .settings-popover.show { display: flex; }
         .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
@@ -138,32 +121,6 @@
             position: relative;
             width: 100%;
             height: 100%;
-        }
-        
-        /* Speciell body för video för att hantera rundade hörn */
-        .widget[data-type="video"] .widget-body {
-            border-radius: 0 0 14px 14px; /* Runda bara nertill */
-            overflow: hidden;
-            background: black;
-        }
-
-        /* Drag-handtag för video */
-        .video-drag-handle {
-            width: 100%;
-            height: 24px;
-            background: #f3f4f6;
-            border-radius: 14px 14px 0 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: move;
-            border-bottom: 1px solid #e5e7eb;
-            color: #9ca3af;
-            font-size: 0.7rem;
-        }
-        .video-drag-handle:hover {
-            background: #e5e7eb;
-            color: #6b7280;
         }
 
         .resize-handle {
@@ -253,7 +210,6 @@
         <div class="nav-item" onclick="createWidget('timer')"><i class="fas fa-hourglass-half"></i><span>Timer</span></div>
         <div class="nav-item" onclick="createWidget('sound')"><i class="fas fa-microphone-alt"></i><span>Ljudnivå</span></div>
         <div class="nav-item" onclick="createWidget('text')"><i class="fas fa-align-left"></i><span>Anteckningar</span></div>
-        <div class="nav-item" onclick="createWidget('video')"><i class="fas fa-video"></i><span>Video</span></div>
         
         <div class="nav-item" onclick="toggleSymbolMenu(event)">
             <i class="fas fa-comment-dots"></i>
@@ -328,30 +284,15 @@
 
         function makeDraggableAndResizable(el) {
             const handle = el.querySelector('.resize-handle');
-            const videoHandle = el.querySelector('.video-drag-handle'); // Hämta extra handtaget om det finns
-            
             let isDragging = false, isResizing = false;
             let startX, startY, startWidth, startHeight;
 
-            // Funktion för att starta drag
-            const startDrag = (e) => {
-                if (e.target.closest('.no-drag') || e.target.closest('.toolbar-btn') || e.target.closest('.settings-popover') || e.target.closest('input') || e.target.closest('button')) return;
-                
-                // Om det är en video, tillåt bara drag via handle
-                if (el.getAttribute('data-type') === 'video' && !e.target.classList.contains('video-drag-handle') && !e.target.closest('.video-drag-handle')) {
-                    // Om man klickar i videokroppen, aktivera bara, dra inte
-                    setActiveWidget(el);
-                    return; 
-                }
-
+            el.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.no-drag') || e.target.closest('.toolbar-btn') || e.target.closest('.settings-popover')) return;
                 setActiveWidget(el);
                 isDragging = true;
                 startX = e.clientX - el.offsetLeft;
                 startY = e.clientY - el.offsetTop;
-                
-                // Blockera iframes tillfälligt så musen inte fastnar
-                document.querySelectorAll('iframe').forEach(i => i.style.pointerEvents = 'none');
-
                 const onMove = (e) => {
                     if (isDragging) {
                         el.style.left = (e.clientX - startX) + 'px';
@@ -360,17 +301,12 @@
                 };
                 const endMove = () => {
                     isDragging = false;
-                    // Återställ iframes
-                    document.querySelectorAll('iframe').forEach(i => i.style.pointerEvents = 'auto');
                     document.removeEventListener('mousemove', onMove);
                     document.removeEventListener('mouseup', endMove);
                 };
                 document.addEventListener('mousemove', onMove);
                 document.addEventListener('mouseup', endMove);
-            };
-
-            el.addEventListener('mousedown', startDrag);
-            if(videoHandle) videoHandle.addEventListener('mousedown', startDrag);
+            });
 
             handle.addEventListener('mousedown', (e) => {
                 e.stopPropagation();
@@ -378,9 +314,6 @@
                 isResizing = true;
                 startX = e.clientX; startY = e.clientY;
                 startWidth = el.offsetWidth; startHeight = el.offsetHeight;
-                
-                document.querySelectorAll('iframe').forEach(i => i.style.pointerEvents = 'none');
-
                 const onResize = (e) => {
                     if (isResizing) {
                         el.style.width = Math.max(120, startWidth + (e.clientX - startX)) + 'px';
@@ -389,7 +322,6 @@
                 };
                 const endResize = () => {
                     isResizing = false;
-                    document.querySelectorAll('iframe').forEach(i => i.style.pointerEvents = 'auto');
                     document.removeEventListener('mousemove', onResize);
                     document.removeEventListener('mouseup', endResize);
                 };
@@ -409,16 +341,11 @@
             widget.setAttribute('data-type', type);
             widget.style.top = (80 + (widgetCount % 10) * 30) + 'px';
             widget.style.left = (80 + (widgetCount % 10) * 30) + 'px';
-            widget.style.width = type === 'clock' || type === 'timer' ? '280px' : (type === 'video' ? '420px' : '220px');
-            widget.style.height = type === 'clock' || type === 'timer' ? '300px' : (type === 'video' ? '280px' : '240px');
+            widget.style.width = type === 'clock' || type === 'timer' ? '280px' : '220px';
+            widget.style.height = type === 'clock' || type === 'timer' ? '300px' : '240px';
             
             let bodyHTML = '';
             let toolbarExtra = '';
-            let dragHandleHTML = '';
-
-            if (type === 'video') {
-                dragHandleHTML = `<div class="video-drag-handle"><i class="fas fa-grip-lines"></i></div>`;
-            }
 
             switch(type) {
                 case 'clock':
@@ -480,37 +407,6 @@
                         </div>
                     `;
                     break;
-                case 'video':
-                    toolbarExtra = `
-                         <div class="toolbar-btn text-[0.6rem] font-bold px-2 py-1 bg-gray-100 rounded-full hover:bg-red-100" onclick="resetVideoWidget('${id}')"><i class="fas fa-undo mr-1"></i>RESET</div>
-                    `;
-                    bodyHTML = `
-                        <div class="widget-body bg-black relative w-full h-full flex flex-col items-center justify-center no-drag">
-                            <!-- Valmeny -->
-                            <div id="vid-menu-${id}" class="absolute inset-0 bg-white flex flex-col gap-3 items-center justify-center p-4 z-20">
-                                <div class="text-sm font-bold text-gray-500 mb-2">VÄLJ VIDEOKÄLLA</div>
-                                <button onclick="showYtInput('${id}')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold w-full shadow-md transition-colors"><i class="fab fa-youtube mr-2"></i>YOUTUBE LÄNK</button>
-                                <button onclick="document.getElementById('vid-file-${id}').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold w-full shadow-md transition-colors"><i class="fas fa-file-video mr-2"></i>LOKAL FIL</button>
-                                <input type="file" id="vid-file-${id}" class="hidden" accept="video/*" onchange="loadLocalVideo('${id}', this)">
-                            </div>
-                            
-                            <!-- YouTube Input -->
-                            <div id="vid-yt-input-${id}" class="hidden absolute inset-0 bg-white flex-col gap-2 items-center justify-center p-4 z-20">
-                                <div class="text-xs font-bold text-gray-500">Klistra in länk:</div>
-                                <input type="text" id="yt-url-${id}" placeholder="https://youtube.com/..." class="w-full p-2 border rounded text-xs bg-gray-50 mb-2">
-                                <div class="flex gap-2 w-full">
-                                    <button onclick="loadYoutube('${id}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded text-xs font-bold shadow">SPELA</button>
-                                    <button onclick="resetVideoWidget('${id}')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-3 rounded text-xs"><i class="fas fa-times"></i></button>
-                                </div>
-                            </div>
-
-                            <!-- Player Container -->
-                            <div id="vid-player-${id}" class="w-full h-full bg-black flex items-center justify-center overflow-hidden">
-                                <div class="text-white text-xs opacity-50">Ingen video vald</div>
-                            </div>
-                        </div>
-                    `;
-                    break;
             }
 
             widget.innerHTML = `
@@ -532,8 +428,7 @@
                         </div>
                     </div>
                 </div>
-                ${dragHandleHTML}
-                <div class="widget-body" style="${type === 'video' ? 'padding:0;' : ''}">${bodyHTML}</div>
+                <div class="widget-body">${bodyHTML}</div>
                 <div class="resize-handle"></div>
             `;
             canvas.appendChild(widget);
@@ -541,56 +436,6 @@
             if (type === 'clock') initClock(id);
             setActiveWidget(widget);
             return widget;
-        }
-
-        // --- Video Widget Functions ---
-        function showYtInput(id) {
-            document.getElementById(`vid-menu-${id}`).classList.add('hidden');
-            document.getElementById(`vid-yt-input-${id}`).classList.remove('hidden');
-            document.getElementById(`vid-yt-input-${id}`).classList.add('flex');
-        }
-
-        function resetVideoWidget(id) {
-            document.getElementById(`vid-menu-${id}`).classList.remove('hidden');
-            document.getElementById(`vid-yt-input-${id}`).classList.add('hidden');
-            document.getElementById(`vid-yt-input-${id}`).classList.remove('flex');
-            document.getElementById(`vid-player-${id}`).innerHTML = '<div class="text-white text-xs opacity-50">Ingen video vald</div>';
-            document.getElementById(`yt-url-${id}`).value = '';
-            document.getElementById(id).removeAttribute('data-video-info');
-        }
-
-        function loadLocalVideo(id, input) {
-            const file = input.files[0];
-            if (!file) return;
-            const url = URL.createObjectURL(file);
-            const player = document.getElementById(`vid-player-${id}`);
-            player.innerHTML = `<video src="${url}" controls class="w-full h-full object-contain" autoplay></video>`;
-            document.getElementById(`vid-menu-${id}`).classList.add('hidden');
-        }
-
-        function loadYoutube(id) {
-            const url = document.getElementById(`yt-url-${id}`).value;
-            let videoId = '';
-            
-            // Hantera olika URL-format
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-            const match = url.match(regExp);
-            if (match && match[2].length === 11) {
-                videoId = match[2];
-            } else {
-                showStatus("Ogiltig YouTube-länk", "error");
-                return;
-            }
-
-            const player = document.getElementById(`vid-player-${id}`);
-            // Använd youtube standarddomän och referrerpolicy="no-referrer" för att dölja lokal körning
-            player.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" referrerpolicy="no-referrer" allowfullscreen></iframe>`;
-            
-            document.getElementById(`vid-yt-input-${id}`).classList.add('hidden');
-            document.getElementById(`vid-yt-input-${id}`).classList.remove('flex');
-            
-            // Spara ID för export
-            document.getElementById(id).setAttribute('data-video-info', JSON.stringify({type: 'youtube', vid: videoId}));
         }
 
         function initClock(id) {
@@ -720,13 +565,6 @@
                 }
                 if (type === 'symbol') { state.data.html = w.querySelector('.symbol-widget-content').innerHTML; }
                 if (type === 'clock') state.data.mode = w.getAttribute('data-mode') || 'digital';
-                
-                // Video Data Save
-                if (type === 'video') {
-                    const vidInfo = w.getAttribute('data-video-info');
-                    if(vidInfo) state.data.video = JSON.parse(vidInfo);
-                }
-
                 state.backgroundColor = w.getAttribute('data-bg') || 'rgba(255,255,255,0.92)';
                 widgets.push(state);
             });
@@ -758,12 +596,6 @@
                     }
                     if (s.type === 'symbol') { w.querySelector('.symbol-widget-content').innerHTML = s.data.html; }
                     if (s.type === 'clock') setClockMode(s.id, s.data.mode || 'digital');
-                    
-                    // Video Data Load
-                    if (s.type === 'video' && s.data.video && s.data.video.type === 'youtube') {
-                        document.getElementById(`yt-url-${s.id}`).value = 'https://youtu.be/' + s.data.video.vid;
-                        loadYoutube(s.id);
-                    }
                 });
                 showStatus("Layout laddad!");
             };
