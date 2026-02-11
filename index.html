@@ -208,6 +208,16 @@
         .rich-text-content ul { list-style-type: disc; padding-left: 1.5rem; }
         .rich-text-content ol { list-style-type: decimal; padding-left: 1.5rem; }
 
+        /* Todo List Styles */
+        .todo-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.05); animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .todo-item:last-child { border-bottom: none; }
+        .todo-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #3b82f6; flex-shrink: 0; }
+        .todo-item span { flex-grow: 1; font-size: 0.9rem; transition: all 0.2s; word-break: break-word; color: #2d3748; line-height: 1.4; }
+        .todo-item.done span { text-decoration: line-through; color: #a0aec0; }
+        .todo-item .delete-btn { color: #cbd5e0; cursor: pointer; transition: color 0.2s; font-size: 0.9rem; padding: 4px; }
+        .todo-item .delete-btn:hover { color: #e53e3e; }
+
         /* Bottenmeny */
         #bottom-nav {
             position: fixed;
@@ -255,6 +265,7 @@
         <div class="nav-item" onclick="createWidget('timer')"><i class="fas fa-hourglass-half"></i><span>Timer</span></div>
         <div class="nav-item" onclick="createWidget('sound')"><i class="fas fa-microphone-alt"></i><span>Ljudnivå</span></div>
         <div class="nav-item" onclick="createWidget('text')"><i class="fas fa-align-left"></i><span>Anteckningar</span></div>
+        <div class="nav-item" onclick="createWidget('todo')"><i class="fas fa-check-square"></i><span>Att göra</span></div>
         
         <div class="nav-item" onclick="toggleSymbolMenu(event)">
             <i class="fas fa-comment-dots"></i>
@@ -329,12 +340,9 @@
 
         function execTextCommand(id, command, value = null) {
             if (command === 'fontSize') {
-                // Specialhantering för specifik textstorlek (px)
-                // Vi använder ett tillfälligt teckenstorleksvärde '7' för att markera texten
                 document.execCommand('fontSize', false, '7');
                 const container = document.getElementById(`tx-${id}`);
                 const fontElements = container.querySelectorAll('font[size="7"]');
-                
                 fontElements.forEach(font => {
                     const span = document.createElement('span');
                     span.style.fontSize = value;
@@ -345,7 +353,6 @@
                 document.execCommand(command, false, value);
             }
             updateToolbarState(id);
-            // Sätt fokus tillbaka till editorn
             const editor = document.getElementById(`tx-${id}`);
             if(editor) editor.focus();
         }
@@ -353,17 +360,12 @@
         function updateToolbarState(id) {
             const w = document.getElementById(id);
             if (!w) return;
-            
-            // Kolla status för bold, italic, underline
             const cmds = ['bold', 'italic', 'underline', 'insertUnorderedList'];
             cmds.forEach(cmd => {
                 const btn = w.querySelector(`[data-cmd="${cmd}"]`);
                 if (btn) {
-                    if (document.queryCommandState(cmd)) {
-                        btn.classList.add('active');
-                    } else {
-                        btn.classList.remove('active');
-                    }
+                    if (document.queryCommandState(cmd)) btn.classList.add('active');
+                    else btn.classList.remove('active');
                 }
             });
         }
@@ -455,13 +457,26 @@
                         </div>
                         <div class="flex gap-2 mt-2 flex-shrink-0 justify-center no-drag">
                             <input type="number" id="${id}-input" value="10" class="w-12 p-1 border rounded text-xs text-center">
-                            <button onclick="startTimer('${id}')" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-xs"><i class="fas fa-play"></i></button>
-                            <button onclick="resetTimer('${id}')" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-xs"><i class="fas fa-redo"></i></button>
+                            <button onclick="toggleTimer('${id}')" id="${id}-play-btn" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-blue-600"><i class="fas fa-play"></i></button>
+                            <button onclick="resetTimer('${id}')" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-xs hover:bg-gray-300"><i class="fas fa-redo"></i></button>
+                            <button onclick="toggleTimerSound('${id}')" id="${id}-sound-btn" class="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg text-xs hover:bg-blue-200" data-sound="on" title="Ljud På/Av"><i class="fas fa-volume-up"></i></button>
                         </div>
                     `;
                     break;
                 case 'symbol':
                     bodyHTML = `<div class="widget-body"><div class="symbol-widget-content">${customContent}</div></div>`;
+                    break;
+                case 'todo':
+                    bodyHTML = `
+                        <div class="widget-body h-full flex flex-col items-start justify-start p-1">
+                            <div class="text-xs font-bold text-gray-400 mb-2 pl-1 uppercase tracking-wider w-full text-center">ATT GÖRA</div>
+                            <div id="todo-list-${id}" class="flex-grow overflow-y-auto w-full no-drag pr-1"></div>
+                            <div class="mt-2 flex gap-1 w-full flex-shrink-0 no-drag border-t border-gray-100 pt-2">
+                                <input type="text" id="todo-input-${id}" placeholder="Ny uppgift..." class="flex-grow p-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-blue-400 bg-gray-50" onkeypress="if(event.key==='Enter') addTodoItem('${id}')">
+                                <button onclick="addTodoItem('${id}')" class="bg-blue-500 text-white px-2.5 rounded text-xs font-bold hover:bg-blue-600 transition-colors"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                    `;
                     break;
                 case 'schedule':
                     bodyHTML = `
@@ -593,29 +608,149 @@
             else { d.classList.add('hidden'); a.classList.remove('hidden'); }
         }
 
+        function toggleTimer(id) {
+            const w = document.getElementById(id);
+            const playBtn = document.getElementById(`${id}-play-btn`);
+            
+            if (w.interval && !w.timerPaused) {
+                // Pausa
+                w.timerPaused = true;
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                playBtn.classList.replace('bg-orange-500', 'bg-blue-500');
+            } else {
+                // Starta eller återuppta
+                startTimer(id);
+            }
+        }
+
         function startTimer(id) {
             const w = document.getElementById(id);
-            if(w.interval) clearInterval(w.interval);
+            const playBtn = document.getElementById(`${id}-play-btn`);
             const input = document.getElementById(`${id}-input`);
-            let total = parseInt(input.value) * 60;
-            let left = total;
+            
+            if (w.interval) clearInterval(w.interval);
+            
+            // Om den inte var pausad, läs in nytt värde
+            if (!w.timerPaused) {
+                w.timerTotal = parseInt(input.value) * 60;
+                w.timerLeft = w.timerTotal;
+            }
+            
+            w.timerPaused = false;
+            playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            playBtn.classList.add('bg-orange-500'); // Paus-knappen är orange för att synas
+            
             w.interval = setInterval(() => {
-                left--;
-                const mins = Math.floor(left/60), secs = left%60;
+                if (w.timerPaused) return;
+
+                w.timerLeft--;
+                const mins = Math.floor(w.timerLeft/60), secs = w.timerLeft%60;
                 const txt = document.getElementById(`${id}-txt`);
                 if(txt) txt.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+                
                 const vis = document.getElementById(`${id}-visual`);
-                if(vis) vis.style.setProperty('--progress', `${(left/total)*100}%`);
-                if(left<=0) { clearInterval(w.interval); showStatus("Tiden är ute!", "success"); }
+                if(vis) vis.style.setProperty('--progress', `${(w.timerLeft/w.timerTotal)*100}%`);
+                
+                if(w.timerLeft <= 0) { 
+                    clearInterval(w.interval); 
+                    w.interval = null;
+                    playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    playBtn.classList.remove('bg-orange-500');
+                    showStatus("Tiden är ute!", "success");
+                    
+                    const soundBtn = document.getElementById(`${id}-sound-btn`);
+                    if(soundBtn && soundBtn.getAttribute('data-sound') === 'on') {
+                        playAlarm();
+                    }
+                }
             }, 1000);
         }
 
         function resetTimer(id) {
             const w = document.getElementById(id);
-            if(w.interval) clearInterval(w.interval);
+            if(w.interval) {
+                clearInterval(w.interval);
+                w.interval = null;
+            }
+            w.timerPaused = false;
+            const playBtn = document.getElementById(`${id}-play-btn`);
+            if (playBtn) {
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                playBtn.classList.remove('bg-orange-500');
+            }
+            
             const val = document.getElementById(`${id}-input`).value;
             document.getElementById(`${id}-txt`).innerText = `${val}:00`;
             document.getElementById(`${id}-visual`).style.setProperty('--progress', '100%');
+        }
+
+        function toggleTimerSound(id) {
+            const btn = document.getElementById(`${id}-sound-btn`);
+            const state = btn.getAttribute('data-sound');
+            if(state === 'on') {
+                btn.setAttribute('data-sound', 'off');
+                btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                btn.classList.replace('bg-blue-100', 'bg-gray-200');
+                btn.classList.replace('text-blue-600', 'text-gray-500');
+            } else {
+                btn.setAttribute('data-sound', 'on');
+                btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                btn.classList.replace('bg-gray-200', 'bg-blue-100');
+                btn.classList.replace('text-gray-500', 'text-blue-600');
+            }
+        }
+
+        function playAlarm() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const now = ctx.currentTime;
+            const freq = 880; // Tonhöjd
+
+            // Funktion för att skapa ett enskilt pip
+            const beep = (startTime) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.5, startTime + 0.02);
+                gain.gain.linearRampToValueAtTime(0, startTime + 0.1);
+                
+                osc.start(startTime);
+                osc.stop(startTime + 0.12);
+            };
+
+            // 3 grupper x 3 pip
+            for (let group = 0; group < 3; group++) {
+                const groupStart = now + (group * 0.8); // 0.8s mellan gruppstarter
+                for (let i = 0; i < 3; i++) {
+                    beep(groupStart + (i * 0.15)); // 0.15s mellan pip i gruppen
+                }
+            }
+        }
+
+        function addTodoItem(id, text = null, isDone = false) {
+            const input = document.getElementById(`todo-input-${id}`);
+            const val = text || input.value.trim();
+            if (!val) return;
+            
+            const list = document.getElementById(`todo-list-${id}`);
+            const item = document.createElement('div');
+            item.className = `todo-item ${isDone ? 'done' : ''}`;
+            item.innerHTML = `
+                <input type="checkbox" onchange="toggleTodo(this)" ${isDone ? 'checked' : ''}>
+                <span>${val}</span>
+                <i class="fas fa-times delete-btn" onclick="this.parentElement.remove()"></i>
+            `;
+            list.appendChild(item);
+            if (!text) input.value = ''; 
+            list.scrollTop = list.scrollHeight;
+        }
+
+        function toggleTodo(cb) {
+            cb.parentElement.classList.toggle('done', cb.checked);
         }
 
         function addScheduleItem(id) {
@@ -686,8 +821,18 @@
                         end: i.querySelector('.time-end').innerText, clr: i.style.backgroundColor
                     }));
                 }
+                if (type === 'todo') {
+                    state.data.items = Array.from(w.querySelectorAll('.todo-item')).map(i => ({
+                        text: i.querySelector('span').innerText,
+                        done: i.querySelector('input[type="checkbox"]').checked
+                    }));
+                }
                 if (type === 'symbol') { state.data.html = w.querySelector('.symbol-widget-content').innerHTML; }
                 if (type === 'clock') state.data.mode = w.getAttribute('data-mode') || 'digital';
+                if (type === 'timer') {
+                    const btn = document.getElementById(`${id}-sound-btn`);
+                    if (btn) state.data.sound = btn.getAttribute('data-sound');
+                }
                 state.backgroundColor = w.getAttribute('data-bg') || 'rgba(255,255,255,0.92)';
                 widgets.push(state);
             });
@@ -718,11 +863,17 @@
                             list.appendChild(div);
                         });
                     }
+                    if (s.type === 'todo' && s.data.items) {
+                        s.data.items.forEach(item => addTodoItem(s.id, item.text, item.done));
+                    }
                     if (s.type === 'symbol') { 
                         const content = w.querySelector('.symbol-widget-content');
                         if(content) content.innerHTML = s.data.html; 
                     }
                     if (s.type === 'clock') setClockMode(s.id, s.data.mode || 'digital');
+                    if (s.type === 'timer' && s.data.sound === 'off') {
+                        toggleTimerSound(s.id);
+                    }
                 });
                 showStatus("Layout laddad!");
             };
