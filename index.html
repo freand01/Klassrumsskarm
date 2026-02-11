@@ -38,8 +38,8 @@
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
             padding: 10px;
-            min-width: 120px;
-            min-height: 80px;
+            min-width: 150px;
+            min-height: 100px;
             cursor: move;
             user-select: none;
             touch-action: none;
@@ -163,6 +163,51 @@
         .schedule-item .time-end { position: absolute; bottom: 6px; right: 10px; font-size: 0.7rem; font-weight: 700; opacity: 0.7; }
         .schedule-item .subject { font-weight: 800; font-size: 1.1rem; text-align: center; }
 
+        /* Rich Text Editor Styling */
+        .text-editor-toolbar {
+            display: flex;
+            gap: 4px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .editor-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #4a5568;
+            transition: all 0.2s;
+        }
+        .editor-btn:hover { background: rgba(0,0,0,0.05); color: #000; }
+        .editor-btn.active { background: #ebf8ff; color: #3182ce; }
+        .editor-select {
+            font-size: 0.7rem;
+            padding: 2px 4px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background: white;
+            outline: none;
+        }
+
+        .rich-text-content {
+            width: 100%;
+            height: 100%;
+            outline: none;
+            overflow-y: auto;
+            text-align: left;
+            align-self: flex-start;
+            line-height: 1.5;
+        }
+        .rich-text-content ul { list-style-type: disc; padding-left: 1.5rem; }
+        .rich-text-content ol { list-style-type: decimal; padding-left: 1.5rem; }
+
         /* Bottenmeny */
         #bottom-nav {
             position: fixed;
@@ -282,6 +327,47 @@
             closeAllSettings();
         }
 
+        function execTextCommand(id, command, value = null) {
+            if (command === 'fontSize') {
+                // Specialhantering för specifik textstorlek (px)
+                // Vi använder ett tillfälligt teckenstorleksvärde '7' för att markera texten
+                document.execCommand('fontSize', false, '7');
+                const container = document.getElementById(`tx-${id}`);
+                const fontElements = container.querySelectorAll('font[size="7"]');
+                
+                fontElements.forEach(font => {
+                    const span = document.createElement('span');
+                    span.style.fontSize = value;
+                    span.innerHTML = font.innerHTML;
+                    font.parentNode.replaceChild(span, font);
+                });
+            } else {
+                document.execCommand(command, false, value);
+            }
+            updateToolbarState(id);
+            // Sätt fokus tillbaka till editorn
+            const editor = document.getElementById(`tx-${id}`);
+            if(editor) editor.focus();
+        }
+
+        function updateToolbarState(id) {
+            const w = document.getElementById(id);
+            if (!w) return;
+            
+            // Kolla status för bold, italic, underline
+            const cmds = ['bold', 'italic', 'underline', 'insertUnorderedList'];
+            cmds.forEach(cmd => {
+                const btn = w.querySelector(`[data-cmd="${cmd}"]`);
+                if (btn) {
+                    if (document.queryCommandState(cmd)) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                }
+            });
+        }
+
         function makeDraggableAndResizable(el) {
             const handle = el.querySelector('.resize-handle');
             let isDragging = false, isResizing = false;
@@ -316,8 +402,8 @@
                 startWidth = el.offsetWidth; startHeight = el.offsetHeight;
                 const onResize = (e) => {
                     if (isResizing) {
-                        el.style.width = Math.max(120, startWidth + (e.clientX - startX)) + 'px';
-                        el.style.height = Math.max(80, startHeight + (e.clientY - startY)) + 'px';
+                        el.style.width = Math.max(150, startWidth + (e.clientX - startX)) + 'px';
+                        el.style.height = Math.max(100, startHeight + (e.clientY - startY)) + 'px';
                     }
                 };
                 const endResize = () => {
@@ -341,8 +427,8 @@
             widget.setAttribute('data-type', type);
             widget.style.top = (80 + (widgetCount % 10) * 30) + 'px';
             widget.style.left = (80 + (widgetCount % 10) * 30) + 'px';
-            widget.style.width = type === 'clock' || type === 'timer' ? '280px' : '220px';
-            widget.style.height = type === 'clock' || type === 'timer' ? '300px' : '240px';
+            widget.style.width = type === 'clock' || type === 'timer' ? '280px' : (type === 'text' ? '400px' : '220px');
+            widget.style.height = type === 'clock' || type === 'timer' ? '300px' : (type === 'text' ? '300px' : '240px');
             
             let bodyHTML = '';
             let toolbarExtra = '';
@@ -397,7 +483,41 @@
                     bodyHTML = `<div class="widget-body"><button onclick="document.getElementById('bg-in-${id}').click()" class="bg-blue-50 text-blue-600 border border-blue-200 p-4 rounded-xl text-xs font-bold w-full hover:bg-blue-100 transition-colors">VÄLJ BILD FRÅN DATORN</button><input type="file" id="bg-in-${id}" class="hidden" accept="image/*" onchange="handleLocalImg(this)"></div>`;
                     break;
                 case 'text':
-                    bodyHTML = `<div class="widget-body h-full no-drag"><textarea id="tx-${id}" class="w-full h-full p-2 bg-transparent border-none resize-none focus:outline-none text-gray-800" placeholder="Skriv anteckningar här..."></textarea></div>`;
+                    bodyHTML = `
+                        <div class="widget-body h-full flex flex-col items-start justify-start">
+                            <div class="text-editor-toolbar no-drag">
+                                <div class="editor-btn" data-cmd="bold" onclick="execTextCommand('${id}', 'bold')" title="Fetstil"><i class="fas fa-bold"></i></div>
+                                <div class="editor-btn" data-cmd="italic" onclick="execTextCommand('${id}', 'italic')" title="Kursiv"><i class="fas fa-italic"></i></div>
+                                <div class="editor-btn" data-cmd="underline" onclick="execTextCommand('${id}', 'underline')" title="Understruken"><i class="fas fa-underline"></i></div>
+                                <div class="h-4 w-[1px] bg-gray-300 mx-1"></div>
+                                <div class="editor-btn" data-cmd="insertUnorderedList" onclick="execTextCommand('${id}', 'insertUnorderedList')" title="Punktlista"><i class="fas fa-list-ul"></i></div>
+                                <div class="h-4 w-[1px] bg-gray-300 mx-1"></div>
+                                <select class="editor-select" onchange="execTextCommand('${id}', 'fontName', this.value)">
+                                    <option value="Inter">Standard</option>
+                                    <option value="Arial">Arial</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Verdana">Verdana</option>
+                                    <option value="Courier New">Courier New</option>
+                                    <option value="Comic Sans MS">Comic Sans</option>
+                                </select>
+                                <select class="editor-select" onchange="execTextCommand('${id}', 'fontSize', this.value)">
+                                    <option value="">Storlek</option>
+                                    <option value="12px">12</option>
+                                    <option value="14px">14</option>
+                                    <option value="16px">16</option>
+                                    <option value="18px">18</option>
+                                    <option value="20px">20</option>
+                                    <option value="24px">24</option>
+                                    <option value="28px">28</option>
+                                    <option value="32px">32</option>
+                                    <option value="48px">48</option>
+                                    <option value="72px">72</option>
+                                </select>
+                            </div>
+                            <div id="tx-${id}" contenteditable="true" class="rich-text-content no-drag p-2" data-placeholder="Skriv anteckningar här..." onmouseup="updateToolbarState('${id}')" onkeyup="updateToolbarState('${id}')"></div>
+                        </div>
+                    `;
                     break;
                 case 'sound':
                     bodyHTML = `
@@ -556,7 +676,10 @@
                 const type = w.getAttribute('data-type');
                 const id = w.id;
                 const state = { id, type, top: w.style.top, left: w.style.left, width: w.style.width, height: w.style.height, data: {} };
-                if (type === 'text') state.data.text = document.getElementById(`tx-${id}`).value;
+                
+                if (type === 'text') {
+                    state.data.html = document.getElementById(`tx-${id}`).innerHTML;
+                }
                 if (type === 'schedule') {
                     state.data.items = Array.from(w.querySelectorAll('.schedule-item')).map(i => ({
                         subj: i.querySelector('.subject').innerText, start: i.querySelector('.time-start').innerText,
@@ -582,9 +705,10 @@
                     const w = createWidget(s.type, null, null, s.id);
                     w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
                     if (s.backgroundColor) setWidgetBackground(s.id, s.backgroundColor);
+                    
                     if (s.type === 'text') {
                         const tx = document.getElementById(`tx-${s.id}`);
-                        if(tx) tx.value = s.data.text || '';
+                        if(tx) tx.innerHTML = s.data.html || '';
                     }
                     if (s.type === 'schedule' && s.data.items) {
                         const list = document.getElementById(`list-${s.id}`);
@@ -594,7 +718,10 @@
                             list.appendChild(div);
                         });
                     }
-                    if (s.type === 'symbol') { w.querySelector('.symbol-widget-content').innerHTML = s.data.html; }
+                    if (s.type === 'symbol') { 
+                        const content = w.querySelector('.symbol-widget-content');
+                        if(content) content.innerHTML = s.data.html; 
+                    }
                     if (s.type === 'clock') setClockMode(s.id, s.data.mode || 'digital');
                 });
                 showStatus("Layout laddad!");
