@@ -18,10 +18,7 @@
 
         #background-layer {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -193,10 +190,11 @@
             transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(15px);
-            padding: 10px 24px;
+            padding: 8px 16px;
             border-radius: 24px;
             display: flex;
-            gap: 12px;
+            align-items: center;
+            gap: 4px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.25);
             z-index: 1000;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -211,17 +209,11 @@
 
         #bottom-nav-trigger {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 0px; 
-            z-index: 999;
+            bottom: 0; left: 0; width: 100%; height: 0px; z-index: 999;
         }
 
         body.is-fullscreen #bottom-nav-trigger,
-        body.is-theater-mode #bottom-nav-trigger {
-            height: 30px; 
-        }
+        body.is-theater-mode #bottom-nav-trigger { height: 30px; }
         
         body.is-fullscreen #bottom-nav-trigger:hover + #bottom-nav,
         body.is-theater-mode #bottom-nav-trigger:hover + #bottom-nav,
@@ -232,21 +224,65 @@
             pointer-events: auto;
         }
 
+        /* Submenyer */
         .nav-item {
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 2px;
             cursor: pointer;
-            padding: 6px;
-            border-radius: 12px;
+            padding: 8px;
+            border-radius: 14px;
             transition: all 0.2s;
             color: #444;
             min-width: 65px;
+            user-select: none;
         }
         .nav-item:hover { background: rgba(0,0,0,0.05); transform: translateY(-3px); }
-        .nav-item i { font-size: 1.2rem; }
+        .nav-item i { font-size: 1.1rem; transition: color 0.2s; }
         .nav-item span { font-size: 0.65rem; font-weight: 700; }
+
+        .submenu {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: white;
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            z-index: 1001;
+            min-width: 220px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .submenu.active {
+            display: grid;
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .submenu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .submenu-item:hover { background: #f3f4f6; transform: scale(1.05); }
+        .submenu-item i { font-size: 1.4rem; margin-bottom: 2px; }
+        .submenu-item span { font-size: 0.65rem; font-weight: 700; color: #4b5563; }
 
         #status-msg { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; padding: 10px 20px; border-radius: 10px; display: none; font-size: 0.85rem; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     </style>
@@ -259,32 +295,62 @@
 
     <div id="bottom-nav-trigger"></div>
     <nav id="bottom-nav">
-        <div class="nav-item" onclick="createWidget('background')"><i class="fas fa-image"></i><span>Bakgrund</span></div>
-        <div class="nav-item" onclick="createWidget('clock')"><i class="fas fa-clock"></i><span>Klocka</span></div>
-        <div class="nav-item" onclick="createWidget('timer')"><i class="fas fa-hourglass-half"></i><span>Timer</span></div>
-        <div class="nav-item" onclick="createWidget('sound')"><i class="fas fa-microphone-alt"></i><span>Ljudnivå</span></div>
-        <div class="nav-item" onclick="createWidget('text')"><i class="fas fa-align-left"></i><span>Anteckningar</span></div>
-        <div class="nav-item" onclick="createWidget('todo')"><i class="fas fa-check-square"></i><span>Att göra</span></div>
-        <div class="nav-item" onclick="createWidget('image')"><i class="fas fa-camera"></i><span>Bild</span></div>
-        <div class="nav-item text-green-600" onclick="createWidget('spotify')"><i class="fab fa-spotify"></i><span>Spotify</span></div>
-        <div class="nav-item text-red-600" onclick="createWidget('youtube')"><i class="fab fa-youtube"></i><span>YouTube</span></div>
-        
-        <div class="nav-item" onclick="toggleSymbolMenu(event)">
-            <i class="fas fa-comment-dots"></i>
-            <span>Symboler</span>
-            <div id="symbol-submenu" class="hidden absolute bottom-20 bg-white p-3 rounded-2xl shadow-2xl grid grid-cols-2 gap-3 min-w-[200px]">
-                <div class="p-3 hover:bg-gray-100 rounded-xl text-center cursor-pointer" onclick="createSymbolWidget('tyst', 'fa-volume-mute', 'Tyst')"><i class="fas fa-volume-mute text-xl mb-1"></i><div class="text-[0.65rem] font-bold">Tyst</div></div>
-                <div class="p-3 hover:bg-gray-100 rounded-xl text-center cursor-pointer" onclick="createSymbolWidget('viska', 'fa-comment', 'Viska')"><i class="fas fa-comment text-xl mb-1"></i><div class="text-[0.65rem] font-bold">Viska</div></div>
-                <div class="p-3 hover:bg-gray-100 rounded-xl text-center cursor-pointer" onclick="createSymbolWidget('granne', 'fa-user-friends', 'Prata granne')"><i class="fas fa-user-friends text-xl mb-1"></i><div class="text-[0.65rem] font-bold">Granne</div></div>
-                <div class="p-3 hover:bg-gray-100 rounded-xl text-center cursor-pointer" onclick="createSymbolWidget('grupp', 'fa-users', 'Grupparbete')"><i class="fas fa-users text-xl mb-1"></i><div class="text-[0.65rem] font-bold">Grupp</div></div>
+        <!-- Verktyg -->
+        <div class="nav-item hover:text-blue-500" onclick="toggleSubmenu(event, 'tools')">
+            <i class="fas fa-tools"></i><span>Verktyg</span>
+            <div id="menu-tools" class="submenu">
+                <div class="submenu-item" onclick="createWidget('clock')"><i class="fas fa-clock text-blue-500"></i><span>Klocka</span></div>
+                <div class="submenu-item" onclick="createWidget('timer')"><i class="fas fa-hourglass-half text-orange-500"></i><span>Timer</span></div>
+                <div class="submenu-item" onclick="createWidget('sound')"><i class="fas fa-microphone-alt text-red-500"></i><span>Ljudnivå</span></div>
             </div>
         </div>
-        
-        <div class="nav-item" onclick="createWidget('schedule')"><i class="fas fa-calendar-alt"></i><span>Schema</span></div>
-        
-        <div class="nav-item text-green-600 border-l pl-4 ml-2" onclick="exportLayoutToFile()"><i class="fas fa-file-download"></i><span>Spara</span></div>
-        <div class="nav-item text-blue-600" onclick="document.getElementById('import-file-input').click()"><i class="fas fa-file-upload"></i><span>Öppna</span><input type="file" id="import-file-input" class="hidden" accept=".json" onchange="importLayoutFromFile(this)"></div>
-        <div class="nav-item text-purple-600" id="fullscreen-btn" onclick="toggleFullscreen()"><i class="fas fa-expand"></i><span>Helskärm</span></div>
+
+        <!-- Skriva -->
+        <div class="nav-item hover:text-amber-500" onclick="toggleSubmenu(event, 'write')">
+            <i class="fas fa-pencil-alt"></i><span>Skriva</span>
+            <div id="menu-write" class="submenu">
+                <div class="submenu-item" onclick="createWidget('text')"><i class="fas fa-align-left text-amber-600"></i><span>Notering</span></div>
+                <div class="submenu-item" onclick="createWidget('todo')"><i class="fas fa-check-square text-green-600"></i><span>Att göra</span></div>
+                <div class="submenu-item" onclick="createWidget('schedule')"><i class="fas fa-calendar-alt text-blue-600"></i><span>Schema</span></div>
+            </div>
+        </div>
+
+        <!-- Media -->
+        <div class="nav-item hover:text-emerald-500" onclick="toggleSubmenu(event, 'media')">
+            <i class="fas fa-play-circle"></i><span>Media</span>
+            <div id="menu-media" class="submenu">
+                <div class="submenu-item" onclick="createWidget('image')"><i class="fas fa-camera text-sky-500"></i><span>Bild</span></div>
+                <div class="submenu-item" onclick="createWidget('spotify')"><i class="fab fa-spotify text-green-500"></i><span>Spotify</span></div>
+                <div class="submenu-item" onclick="createWidget('youtube')"><i class="fab fa-youtube text-red-600"></i><span>YouTube</span></div>
+            </div>
+        </div>
+
+        <!-- Symboler -->
+        <div class="nav-item hover:text-indigo-500" onclick="toggleSubmenu(event, 'symbols')">
+            <i class="fas fa-comment-dots"></i><span>Symboler</span>
+            <div id="menu-symbols" class="submenu">
+                <div class="submenu-item" onclick="createSymbolWidget('tyst', 'fa-volume-mute', 'Tyst')"><i class="fas fa-volume-mute text-gray-600"></i><span>Tyst</span></div>
+                <!-- Ändrad ikon för Viska för bättre tydlighet -->
+                <div class="submenu-item" onclick="createSymbolWidget('viska', 'fa-volume-low', 'Viska')"><i class="fas fa-volume-low text-sky-400"></i><span>Viska</span></div>
+                <div class="submenu-item" onclick="createSymbolWidget('granne', 'fa-user-friends', 'Prata granne')"><i class="fas fa-user-friends text-amber-500"></i><span>Granne</span></div>
+                <div class="submenu-item" onclick="createSymbolWidget('grupp', 'fa-users', 'Grupparbete')"><i class="fas fa-users text-indigo-500"></i><span>Grupp</span></div>
+            </div>
+        </div>
+
+        <div class="h-8 w-[1px] bg-gray-300 mx-2"></div>
+
+        <!-- System -->
+        <div class="nav-item hover:text-slate-600" onclick="toggleSubmenu(event, 'system')">
+            <i class="fas fa-cog"></i><span>System</span>
+            <div id="menu-system" class="submenu !min-w-[150px] !grid-cols-2">
+                <div class="submenu-item" onclick="createWidget('background')"><i class="fas fa-image text-slate-700"></i><span>Bakgrund</span></div>
+                <div class="submenu-item" onclick="toggleFullscreen()"><i class="fas fa-expand text-purple-600"></i><span>Helskärm</span></div>
+                <div class="submenu-item" onclick="exportLayoutToFile()"><i class="fas fa-file-download text-emerald-600"></i><span>Spara</span></div>
+                <div class="submenu-item" onclick="document.getElementById('import-file-input').click()"><i class="fas fa-file-upload text-blue-600"></i><span>Öppna</span></div>
+            </div>
+        </div>
+
+        <input type="file" id="import-file-input" class="hidden" accept=".json" onchange="importLayoutFromFile(this)">
     </nav>
 
     <script>
@@ -292,6 +358,19 @@
         let zIndexCounter = 10;
         let widgetCount = 0;
         let activeWidget = null;
+
+        // Submeny logik
+        function toggleSubmenu(e, menuId) {
+            e.stopPropagation();
+            const targetMenu = document.getElementById(`menu-${menuId}`);
+            const isActive = targetMenu.classList.contains('active');
+            document.querySelectorAll('.submenu').forEach(m => m.classList.remove('active'));
+            if (!isActive) targetMenu.classList.add('active');
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.submenu').forEach(m => m.classList.remove('active'));
+        });
 
         canvas.addEventListener('mousedown', (e) => {
             if (e.target === canvas) {
@@ -329,39 +408,17 @@
 
         function activateTheaterMode() {
             document.body.classList.add('is-theater-mode');
-            const btn = document.getElementById('fullscreen-btn');
-            btn.innerHTML = '<i class="fas fa-compress"></i><span>Stäng</span>';
             showStatus("Biografläge aktiverat");
         }
 
         function deactivateTheaterMode() {
             document.body.classList.remove('is-theater-mode');
-            const btn = document.getElementById('fullscreen-btn');
-            btn.innerHTML = '<i class="fas fa-expand"></i><span>Helskärm</span>';
         }
 
         document.addEventListener('fullscreenchange', () => {
-            const btn = document.getElementById('fullscreen-btn');
-            if (document.fullscreenElement) {
-                document.body.classList.add('is-fullscreen');
-                btn.innerHTML = '<i class="fas fa-compress"></i><span>Stäng</span>';
-            } else {
-                document.body.classList.remove('is-fullscreen');
-                deactivateTheaterMode();
-            }
+            if (document.fullscreenElement) document.body.classList.add('is-fullscreen');
+            else { document.body.classList.remove('is-fullscreen'); deactivateTheaterMode(); }
         });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === "Escape" && document.body.classList.contains('is-theater-mode')) deactivateTheaterMode();
-        });
-
-        function toggleSettingsMenu(e, id) {
-            e.stopPropagation();
-            const popover = document.querySelector(`#${id} .settings-popover`);
-            const isShown = popover.classList.contains('show');
-            closeAllSettings();
-            if (!isShown) popover.classList.add('show');
-        }
 
         function setWidgetBackground(id, color) {
             const w = document.getElementById(id);
@@ -376,92 +433,52 @@
 
         function setAppBackground(type, value, widgetId = null) {
             const layer = document.getElementById('background-layer');
-            if (type === 'image') {
-                layer.style.backgroundImage = `url('${value}')`; layer.style.backgroundColor = 'transparent';
-            } else if (type === 'color') {
-                layer.style.backgroundImage = 'none'; layer.style.backgroundColor = value;
-            }
+            if (type === 'image') { layer.style.backgroundImage = `url('${value}')`; layer.style.backgroundColor = 'transparent'; }
+            else if (type === 'color') { layer.style.backgroundImage = 'none'; layer.style.backgroundColor = value; }
             if (widgetId) removeWidget(widgetId);
         }
 
         function execTextCommand(id, command, value = null) {
-            if (command === 'fontSize') {
-                document.execCommand('fontSize', false, '7');
-                const container = document.getElementById(`tx-${id}`);
-                const fontElements = container.querySelectorAll('font[size="7"]');
-                fontElements.forEach(font => {
-                    const span = document.createElement('span');
-                    span.style.fontSize = value;
-                    span.innerHTML = font.innerHTML;
-                    font.parentNode.replaceChild(span, font);
-                });
-            } else {
-                document.execCommand(command, false, value);
-            }
+            document.execCommand(command, false, value);
             updateToolbarState(id);
             const editor = document.getElementById(`tx-${id}`);
             if(editor) editor.focus();
         }
 
         function updateToolbarState(id) {
-            const w = document.getElementById(id);
-            if (!w) return;
-            const cmds = ['bold', 'italic', 'underline', 'insertUnorderedList'];
-            cmds.forEach(cmd => {
+            const w = document.getElementById(id); if (!w) return;
+            ['bold', 'italic', 'underline', 'insertUnorderedList'].forEach(cmd => {
                 const btn = w.querySelector(`[data-cmd="${cmd}"]`);
-                if (btn) {
-                    if (document.queryCommandState(cmd)) btn.classList.add('active');
-                    else btn.classList.remove('active');
-                }
+                if (btn) btn.classList.toggle('active', document.queryCommandState(cmd));
             });
         }
 
         function makeDraggableAndResizable(el) {
-            let isDragging = false;
-            let currentResizer = null;
+            let isDragging = false, currentResizer = null;
             let startX, startY, startWidth, startHeight, startLeft, startTop;
 
             el.addEventListener('mousedown', (e) => {
-                if (e.target.closest('.no-drag') || e.target.closest('.toolbar-btn') || e.target.closest('.settings-popover') || e.target.closest('.resizer')) return;
+                if (e.target.closest('.no-drag') || e.target.closest('.toolbar-btn') || e.target.closest('.submenu') || e.target.closest('.resizer')) return;
                 setActiveWidget(el);
-                isDragging = true;
-                startX = e.clientX - el.offsetLeft;
-                startY = e.clientY - el.offsetTop;
-                const onMove = (e) => {
-                    if (isDragging) {
-                        el.style.left = (e.clientX - startX) + 'px';
-                        el.style.top = (e.clientY - startY) + 'px';
-                    }
-                };
-                const endMove = () => {
-                    isDragging = false;
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', endMove);
-                };
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', endMove);
+                isDragging = true; startX = e.clientX - el.offsetLeft; startY = e.clientY - el.offsetTop;
+                const onMove = (e) => { if (isDragging) { el.style.left = (e.clientX - startX) + 'px'; el.style.top = (e.clientY - startY) + 'px'; } };
+                const endMove = () => { isDragging = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', endMove); };
+                document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', endMove);
             });
 
-            const resizers = el.querySelectorAll('.resizer');
-            resizers.forEach(resizer => {
+            el.querySelectorAll('.resizer').forEach(resizer => {
                 resizer.addEventListener('mousedown', (e) => {
-                    e.stopPropagation(); e.preventDefault();
-                    setActiveWidget(el);
-                    currentResizer = resizer;
-                    startX = e.clientX; startY = e.clientY;
-                    startWidth = el.offsetWidth; startHeight = el.offsetHeight;
-                    startLeft = el.offsetLeft; startTop = el.offsetTop;
+                    e.stopPropagation(); e.preventDefault(); setActiveWidget(el);
+                    currentResizer = resizer; startX = e.clientX; startY = e.clientY;
+                    startWidth = el.offsetWidth; startHeight = el.offsetHeight; startLeft = el.offsetLeft; startTop = el.offsetTop;
                     const onResize = (e) => {
                         if (!currentResizer) return;
-                        const dx = e.clientX - startX; const dy = e.clientY - startY;
-                        if (currentResizer.classList.contains('resizer-e')) { el.style.width = Math.max(180, startWidth + dx) + 'px'; }
-                        else if (currentResizer.classList.contains('resizer-w')) { const newWidth = Math.max(180, startWidth - dx); if (newWidth !== 180) { el.style.width = newWidth + 'px'; el.style.left = (startLeft + dx) + 'px'; } }
-                        else if (currentResizer.classList.contains('resizer-s')) { el.style.height = Math.max(120, startHeight + dy) + 'px'; }
-                        else if (currentResizer.classList.contains('resizer-n')) { const newHeight = Math.max(120, startHeight - dy); if (newHeight !== 120) { el.style.height = newHeight + 'px'; el.style.top = (startTop + dy) + 'px'; } }
+                        const dx = e.clientX - startX, dy = e.clientY - startY;
+                        if (currentResizer.classList.contains('resizer-e')) el.style.width = Math.max(180, startWidth + dx) + 'px';
+                        else if (currentResizer.classList.contains('resizer-w')) { const nw = Math.max(180, startWidth - dx); if (nw !== 180) { el.style.width = nw + 'px'; el.style.left = (startLeft + dx) + 'px'; } }
+                        else if (currentResizer.classList.contains('resizer-s')) el.style.height = Math.max(120, startHeight + dy) + 'px';
+                        else if (currentResizer.classList.contains('resizer-n')) { const nh = Math.max(120, startHeight - dy); if (nh !== 120) { el.style.height = nh + 'px'; el.style.top = (startTop + dy) + 'px'; } }
                         else if (currentResizer.classList.contains('resizer-se')) { el.style.width = Math.max(180, startWidth + dx) + 'px'; el.style.height = Math.max(120, startHeight + dy) + 'px'; }
-                        else if (currentResizer.classList.contains('resizer-sw')) { const newWidth = Math.max(180, startWidth - dx); el.style.height = Math.max(120, startHeight + dy) + 'px'; if (newWidth !== 180) { el.style.width = newWidth + 'px'; el.style.left = (startLeft + dx) + 'px'; } }
-                        else if (currentResizer.classList.contains('resizer-ne')) { const newHeight = Math.max(120, startHeight - dy); el.style.width = Math.max(180, startWidth + dx) + 'px'; if (newHeight !== 120) { el.style.height = newHeight + 'px'; el.style.top = (startTop + dy) + 'px'; } }
-                        else if (currentResizer.classList.contains('resizer-nw')) { const newWidth = Math.max(180, startWidth - dx); const newHeight = Math.max(120, startHeight - dy); if (newWidth !== 180) { el.style.width = newWidth + 'px'; el.style.left = (startLeft + dx) + 'px'; } if (newHeight !== 120) { el.style.height = newHeight + 'px'; el.style.top = (startTop + dy) + 'px'; } }
                     };
                     const endResize = () => { currentResizer = null; document.removeEventListener('mousemove', onResize); document.removeEventListener('mouseup', endResize); };
                     document.addEventListener('mousemove', onResize); document.addEventListener('mouseup', endResize);
@@ -469,76 +486,63 @@
             });
         }
 
-        function toggleSymbolMenu(e) { e.stopPropagation(); document.getElementById('symbol-submenu').classList.toggle('hidden'); }
-        document.addEventListener('click', () => { document.getElementById('symbol-submenu').classList.add('hidden'); });
-
         function createWidget(type, customContent = null, customTitle = null, existingId = null) {
             const id = existingId || `w-${type}-${++widgetCount}`;
             const widget = document.createElement('div');
-            widget.className = 'widget';
-            widget.id = id;
-            widget.setAttribute('data-type', type);
-            widget.style.top = (80 + (widgetCount % 10) * 30) + 'px';
-            widget.style.left = (80 + (widgetCount % 10) * 30) + 'px';
+            widget.className = 'widget'; widget.id = id; widget.setAttribute('data-type', type);
+            widget.style.top = (80 + (widgetCount % 10) * 30) + 'px'; widget.style.left = (80 + (widgetCount % 10) * 30) + 'px';
             
-            // Standardstorlekar
-            let w = "220px", h = "240px";
+            let w = "220px", h = "240px", bodyHTML = '', toolbarExtra = '';
             if (type === 'clock' || type === 'timer') { w = "320px"; h = "300px"; }
             if (type === 'text' || type === 'background' || type === 'image') { w = "400px"; h = "300px"; }
-            if (type === 'spotify') { w = "320px"; h = "152px"; }
+            if (type === 'spotify') { w = "320px"; h = "380px"; }
             if (type === 'youtube') { w = "400px"; h = "280px"; }
-            
             widget.style.width = w; widget.style.height = h;
-            
-            let bodyHTML = '';
-            let toolbarExtra = '';
 
             switch(type) {
                 case 'clock':
-                    toolbarExtra = `<div class="toolbar-btn text-[0.6rem] font-bold px-2 py-1 bg-gray-100 rounded-full hover:bg-blue-100" onclick="setClockMode('${id}', 'digital')">DIGI</div><div class="toolbar-btn text-[0.6rem] font-bold px-2 py-1 bg-gray-100 rounded-full hover:bg-blue-100" onclick="setClockMode('${id}', 'analog')">ANA</div>`;
+                    toolbarExtra = `<div class="toolbar-btn px-2 py-1 bg-gray-100 rounded-full text-[10px]" onclick="setClockMode('${id}', 'digital')">DIGI</div><div class="toolbar-btn px-2 py-1 bg-gray-100 rounded-full text-[10px]" onclick="setClockMode('${id}', 'analog')">ANA</div>`;
                     bodyHTML = `<div class="widget-body"><div id="${id}-dig" class="clock-display">00:00:00</div><div id="${id}-ana" class="hidden w-full h-full flex items-center justify-center"><div class="analog-clock-wrapper"><div class="analog-clock" id="${id}-face"></div></div></div></div>`;
                     break;
                 case 'timer':
                     bodyHTML = `<div class="widget-body"><div class="visual-timer-circle" id="${id}-visual" style="--progress: 100%; --timer-color: #48bb78"><div class="timer-display" id="${id}-txt">10:00</div></div></div><div class="flex gap-2 mt-2 flex-shrink-0 justify-center no-drag"><input type="number" id="${id}-input" value="10" class="w-12 p-1 border rounded text-xs text-center"><button onclick="toggleTimer('${id}')" id="${id}-play-btn" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-blue-600"><i class="fas fa-play"></i></button><button onclick="resetTimer('${id}')" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-xs hover:bg-gray-300"><i class="fas fa-redo"></i></button><button onclick="toggleTimerSound('${id}')" id="${id}-sound-btn" class="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg text-xs hover:bg-blue-200" data-sound="on"><i class="fas fa-volume-up"></i></button></div>`;
                     break;
                 case 'spotify':
-                    toolbarExtra = `<div class="toolbar-btn" onclick="showSpotifyInput('${id}')" title="Byt musik"><i class="fab fa-spotify"></i></div>`;
-                    bodyHTML = `<div class="widget-body p-0"><div id="spot-cont-${id}" class="spotify-container flex flex-col items-center justify-center bg-gray-900 border-2 border-green-500 border-dashed w-full h-full p-4"><div id="spot-input-grp-${id}" class="w-full flex flex-col gap-2"><input type="text" id="spot-link-${id}" placeholder="Klistra in Spotify-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white border border-green-900 focus:border-green-500 outline-none no-drag"><button onclick="handleSpotifySubmit('${id}')" class="bg-green-500 text-black font-bold py-1.5 px-3 rounded text-xs hover:bg-green-400 transition-colors no-drag">LADDA SPELARE</button><p class="text-[10px] text-gray-400 text-center mt-1">Obs: Du måste vara inloggad på Spotify i webbläsaren för att höra hela låtar.</p></div></div></div>`;
+                    toolbarExtra = `<div class="toolbar-btn" onclick="showSpotifyInput('${id}')"><i class="fab fa-spotify text-green-500"></i></div>`;
+                    bodyHTML = `<div class="widget-body p-0"><div id="spot-cont-${id}" class="spotify-container flex flex-col items-center justify-center bg-gray-900 border-2 border-green-500 border-dashed w-full h-full p-4"><div id="spot-input-grp-${id}" class="w-full flex flex-col gap-2"><input type="text" id="spot-link-${id}" placeholder="Spotify-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white border border-green-900 outline-none no-drag"><button onclick="handleSpotifySubmit('${id}')" class="bg-green-500 text-black font-bold py-1.5 px-3 rounded text-xs hover:bg-green-400 no-drag">LADDA</button><p class="text-[10px] text-gray-400 text-center mt-1 italic">Logga in på Spotify i webbläsaren för hela låtar.</p></div></div></div>`;
                     break;
                 case 'youtube':
-                    toolbarExtra = `<div class="toolbar-btn" onclick="showYouTubeInput('${id}')" title="Byt video"><i class="fab fa-youtube"></i></div>`;
-                    bodyHTML = `<div class="widget-body p-0"><div id="yt-cont-${id}" class="youtube-container flex flex-col items-center justify-center bg-gray-900 border-2 border-red-500 border-dashed w-full h-full p-4"><div id="yt-input-grp-${id}" class="w-full flex flex-col gap-2"><input type="text" id="yt-link-${id}" placeholder="YouTube-länk eller ID..." class="w-full p-2 text-xs rounded bg-gray-800 text-white border border-red-900 focus:border-red-500 outline-none no-drag"><button onclick="handleYouTubeSubmit('${id}')" class="bg-red-600 text-white font-bold py-1.5 px-3 rounded text-xs hover:bg-red-500 transition-colors no-drag">LADDA VIDEO</button></div></div></div>`;
+                    toolbarExtra = `<div class="toolbar-btn" onclick="showYouTubeInput('${id}')"><i class="fab fa-youtube text-red-600"></i></div>`;
+                    bodyHTML = `<div class="widget-body p-0"><div id="yt-cont-${id}" class="youtube-container flex flex-col items-center justify-center bg-gray-900 border-2 border-red-500 border-dashed w-full h-full p-4"><div id="yt-input-grp-${id}" class="w-full flex flex-col gap-2"><input type="text" id="yt-link-${id}" placeholder="YouTube-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white border border-red-900 outline-none no-drag"><button onclick="handleYouTubeSubmit('${id}')" class="bg-red-600 text-white font-bold py-1.5 px-3 rounded text-xs hover:bg-red-500 no-drag">LADDA</button></div></div></div>`;
                     break;
                 case 'image':
-                    toolbarExtra = `<div class="toolbar-btn" onclick="document.getElementById('img-in-${id}').click()" title="Byt bild"><i class="fas fa-sync-alt"></i></div>`;
-                    bodyHTML = `<div class="widget-body p-1"><div id="img-cont-${id}" class="image-widget-container flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-200 w-full h-full"><button onclick="document.getElementById('img-in-${id}').click()" class="text-blue-500 font-bold text-xs no-drag hover:underline">VÄLJ BILD</button></div><input type="file" id="img-in-${id}" class="hidden" accept="image/*" onchange="handleWidgetImg(this, '${id}')"></div>`;
+                    toolbarExtra = `<div class="toolbar-btn" onclick="document.getElementById('img-in-${id}').click()"><i class="fas fa-sync-alt"></i></div>`;
+                    bodyHTML = `<div class="widget-body p-1"><div id="img-cont-${id}" class="image-widget-container flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-200 w-full h-full"><button onclick="document.getElementById('img-in-${id}').click()" class="text-blue-500 font-bold text-xs no-drag">VÄLJ BILD</button></div><input type="file" id="img-in-${id}" class="hidden" accept="image/*" onchange="handleWidgetImg(this, '${id}')"></div>`;
                     break;
                 case 'todo':
-                    bodyHTML = `<div class="widget-body h-full flex flex-col items-start justify-start p-1"><div class="text-xs font-bold text-gray-400 mb-2 pl-1 uppercase tracking-wider w-full text-center">ATT GÖRA</div><div id="todo-list-${id}" class="flex-grow overflow-y-auto w-full no-drag pr-1"></div><div class="mt-2 flex gap-1 w-full flex-shrink-0 no-drag border-t border-gray-100 pt-2"><input type="text" id="todo-input-${id}" placeholder="Ny uppgift..." class="flex-grow p-1.5 border border-gray-200 rounded text-xs focus:outline-none focus:border-blue-400 bg-gray-50" onkeypress="if(event.key==='Enter') addTodoItem('${id}')"><button onclick="addTodoItem('${id}')" class="bg-blue-500 text-white px-2.5 rounded text-xs font-bold hover:bg-blue-600 transition-colors"><i class="fas fa-plus"></i></button></div></div>`;
+                    bodyHTML = `<div class="widget-body h-full flex flex-col items-start justify-start p-1"><div class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider w-full text-center">ATT GÖRA</div><div id="todo-list-${id}" class="flex-grow overflow-y-auto w-full no-drag pr-1"></div><div class="mt-2 flex gap-1 w-full flex-shrink-0 no-drag border-t pt-2"><input type="text" id="todo-input-${id}" placeholder="Ny uppgift..." class="flex-grow p-1.5 border rounded text-xs bg-gray-50 no-drag" onkeypress="if(event.key==='Enter') addTodoItem('${id}')"><button onclick="addTodoItem('${id}')" class="bg-blue-500 text-white px-2.5 rounded text-xs no-drag">+</button></div></div>`;
                     break;
                 case 'schedule':
-                    bodyHTML = `<div id="list-${id}" class="widget-body space-y-2 mb-2 overflow-y-auto block w-full no-drag"></div><div class="border-t pt-2 space-y-1 flex-shrink-0 w-full no-drag"><input type="text" id="subj-${id}" placeholder="Ämne..." class="w-full p-1 border rounded text-[0.65rem]"><div class="flex gap-1"><input type="text" id="start-${id}" placeholder="08.10" class="w-1/2 p-1 border rounded text-[0.65rem]"><input type="text" id="end-${id}" placeholder="09.00" class="w-1/2 p-1 border rounded text-[0.65rem]"></div><div class="flex items-center gap-1"><input type="color" id="clr-${id}" value="#ffeb3b" class="w-6 h-6 border-none bg-transparent cursor-pointer"><button onclick="addScheduleItem('${id}')" class="flex-1 bg-black text-white p-1 rounded-lg text-[0.65rem] font-bold">+ LÄGG TILL</button></div></div>`;
+                    bodyHTML = `<div id="list-${id}" class="widget-body space-y-2 mb-2 overflow-y-auto block w-full no-drag"></div><div class="border-t pt-2 space-y-1 w-full no-drag"><input type="text" id="subj-${id}" placeholder="Ämne..." class="w-full p-1 border rounded text-[0.65rem]"><div class="flex gap-1"><input type="text" id="start-${id}" placeholder="08.10" class="w-1/2 p-1 border rounded text-[0.65rem]"><input type="text" id="end-${id}" placeholder="09.00" class="w-1/2 p-1 border rounded text-[0.65rem]"></div><button onclick="addScheduleItem('${id}')" class="w-full bg-black text-white p-1 rounded-lg text-[0.65rem]">+ LÄGG TILL</button></div>`;
                     break;
                 case 'background':
-                    bodyHTML = `<div class="widget-body p-2 overflow-y-auto"><div class="text-[0.65rem] font-bold text-gray-400 mb-2 uppercase tracking-wide">Ladda upp bild</div><button onclick="document.getElementById('bg-in-${id}').click()" class="bg-blue-50 text-blue-600 border border-blue-200 p-3 rounded-xl text-xs font-bold w-full hover:bg-blue-100 transition-colors mb-4 no-drag"><i class="fas fa-upload mr-2"></i>VÄLJ FIL</button><input type="file" id="bg-in-${id}" class="hidden" accept="image/*" onchange="handleLocalImg(this, '${id}')"><div class="text-[0.65rem] font-bold text-gray-400 mb-2 uppercase tracking-wide">Eller välj färg</div><div class="grid grid-cols-4 gap-2 no-drag"><div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #ffffff" onclick="setAppBackground('color', '#ffffff', '${id}')"></div><div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #ebf8ff" onclick="setAppBackground('color', '#ebf8ff', '${id}')"></div><div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #f0fff4" onclick="setAppBackground('color', '#f0fff4', '${id}')"></div><div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #fffff0" onclick="setAppBackground('color', '#fffff0', '${id}')"></div><div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #fff5f5" onclick="setAppBackground('color', '#fff5f5', '${id}')"></div><div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #faf5ff" onclick="setAppBackground('color', '#faf5ff', '${id}')"></div><div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #2d3748" onclick="setAppBackground('color', '#2d3748', '${id}')"></div><div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer flex items-center justify-center bg-gray-100" onclick="setAppBackground('color', '#1a1a1a', '${id}')"><i class="fas fa-moon text-gray-400 text-xs"></i></div></div></div>`;
+                    bodyHTML = `<div class="widget-body p-2 overflow-y-auto"><button onclick="document.getElementById('bg-in-${id}').click()" class="bg-blue-50 text-blue-600 border border-blue-200 p-3 rounded-xl text-xs font-bold w-full mb-4 no-drag">VÄLJ BILD</button><input type="file" id="bg-in-${id}" class="hidden" accept="image/*" onchange="handleLocalImg(this, '${id}')"><div class="grid grid-cols-4 gap-2 no-drag"><div class="w-full aspect-square rounded-lg border cursor-pointer" style="background: #ffffff" onclick="setAppBackground('color', '#ffffff', '${id}')"></div><div class="w-full aspect-square rounded-lg border cursor-pointer" style="background: #ebf8ff" onclick="setAppBackground('color', '#ebf8ff', '${id}')"></div><div class="w-full aspect-square rounded-lg border cursor-pointer" style="background: #f0fff4" onclick="setAppBackground('color', '#f0fff4', '${id}')"></div><div class="w-full aspect-square rounded-lg border cursor-pointer" style="background: #2d3748" onclick="setAppBackground('color', '#2d3748', '${id}')"></div></div></div>`;
                     break;
                 case 'text':
-                    bodyHTML = `<div class="widget-body h-full flex flex-col items-start justify-start"><div class="text-editor-toolbar no-drag"><div class="editor-btn" data-cmd="bold" onclick="execTextCommand('${id}', 'bold')" title="Fetstil"><i class="fas fa-bold"></i></div><div class="editor-btn" data-cmd="italic" onclick="execTextCommand('${id}', 'italic')" title="Kursiv"><i class="fas fa-italic"></i></div><div class="editor-btn" data-cmd="underline" onclick="execTextCommand('${id}', 'underline')" title="Understruken"><i class="fas fa-underline"></i></div><div class="h-4 w-[1px] bg-gray-300 mx-1"></div><div class="editor-btn" data-cmd="insertUnorderedList" onclick="execTextCommand('${id}', 'insertUnorderedList')" title="Punktlista"><i class="fas fa-list-ul"></i></div><div class="h-4 w-[1px] bg-gray-300 mx-1"></div><select class="editor-select" onchange="execTextCommand('${id}', 'fontName', this.value)"><option value="Inter">Standard</option><option value="Arial">Arial</option><option value="Times New Roman">Times New Roman</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Courier New">Courier New</option><option value="Comic Sans MS">Comic Sans</option></select><select class="editor-select" onchange="execTextCommand('${id}', 'fontSize', this.value)"><option value="">Storlek</option><option value="12px">12</option><option value="14px">14</option><option value="16px">16</option><option value="18px">18</option><option value="20px">20</option><option value="24px">24</option><option value="28px">28</option><option value="32px">32</option><option value="48px">48</option><option value="72px">72</option></select></div><div id="tx-${id}" contenteditable="true" class="rich-text-content no-drag p-2" data-placeholder="Skriv anteckningar här..." onmouseup="updateToolbarState('${id}')" onkeyup="updateToolbarState('${id}')"></div></div>`;
+                    bodyHTML = `<div class="widget-body h-full flex flex-col"><div class="text-editor-toolbar no-drag"><div class="editor-btn" onclick="execTextCommand('${id}', 'bold')"><i class="fas fa-bold"></i></div><div class="editor-btn" onclick="execTextCommand('${id}', 'italic')"><i class="fas fa-italic"></i></div><div class="editor-btn" onclick="execTextCommand('${id}', 'insertUnorderedList')"><i class="fas fa-list-ul"></i></div></div><div id="tx-${id}" contenteditable="true" class="rich-text-content no-drag p-2" data-placeholder="Skriv här..."></div></div>`;
                     break;
                 case 'sound':
-                    bodyHTML = `<div class="widget-body"><div class="w-full bg-gray-100 h-4 rounded-full overflow-hidden mb-3"><div id="sf-${id}" class="h-full bg-gradient-to-r from-green-400 to-red-500 w-0 transition-all"></div></div><button onclick="toggleMic('${id}')" class="w-full bg-gray-900 text-white p-2 rounded-xl text-[0.7rem] font-bold">MIKROFON</button></div>`;
+                    bodyHTML = `<div class="widget-body"><div class="w-full bg-gray-100 h-4 rounded-full overflow-hidden mb-3"><div id="sf-${id}" class="h-full bg-gradient-to-r from-green-400 to-red-500 w-0 transition-all"></div></div><button onclick="toggleMic('${id}')" class="w-full bg-gray-900 text-white p-2 rounded-xl text-[0.7rem]">MIKROFON</button></div>`;
                     break;
                 case 'symbol':
                     bodyHTML = `<div class="widget-body"><div class="symbol-widget-content">${customContent}</div></div>`;
                     break;
             }
 
-            widget.innerHTML = `<div class="resizer resizer-n"></div><div class="resizer resizer-s"></div><div class="resizer resizer-e"></div><div class="resizer resizer-w"></div><div class="resizer resizer-nw"></div><div class="resizer resizer-ne"></div><div class="resizer resizer-sw"></div><div class="resizer resizer-se"></div><div class="widget-toolbar">${toolbarExtra}<div class="toolbar-btn" onclick="toggleSettingsMenu(event, '${id}')"><i class="fas fa-ellipsis-v"></i></div><div class="toolbar-btn delete" onclick="removeWidget('${id}')"><i class="fas fa-trash"></i></div><div class="settings-popover"><div class="text-[0.6rem] font-bold text-gray-400 mb-1">STIL</div><div class="color-grid"><div class="color-option" style="background: rgba(255,255,255,0.92)" onclick="setWidgetBackground('${id}', 'rgba(255,255,255,0.92)')"></div><div class="color-option" style="background: transparent" onclick="setWidgetBackground('${id}', 'transparent')"><i class="fas fa-slash"></i></div><div class="color-option" style="background: rgba(235, 248, 255, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(235, 248, 255, 0.9)')"></div><div class="color-option" style="background: rgba(240, 255, 244, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(240, 255, 244, 0.9)')"></div><div class="color-option" style="background: rgba(255, 255, 240, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(255, 255, 240, 0.9)')"></div><div class="color-option" style="background: rgba(255, 245, 245, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(255, 245, 245, 0.9)')"></div><div class="color-option" style="background: rgba(250, 245, 255, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(250, 245, 255, 0.9)')"></div><div class="color-option" style="background: rgba(45, 55, 72, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(45, 55, 72, 0.9)')"></div></div></div></div><div class="widget-body">${bodyHTML}</div>`;
-            canvas.appendChild(widget);
-            makeDraggableAndResizable(widget);
+            widget.innerHTML = `<div class="resizer resizer-n"></div><div class="resizer resizer-s"></div><div class="resizer resizer-e"></div><div class="resizer resizer-w"></div><div class="resizer resizer-nw"></div><div class="resizer resizer-ne"></div><div class="resizer resizer-sw"></div><div class="resizer resizer-se"></div><div class="widget-toolbar">${toolbarExtra}<div class="toolbar-btn" onclick="toggleSettingsMenu(event, '${id}')"><i class="fas fa-ellipsis-v"></i></div><div class="toolbar-btn delete" onclick="removeWidget('${id}')"><i class="fas fa-trash"></i></div><div class="settings-popover"><div class="text-[0.6rem] font-bold text-gray-400 mb-1">STIL</div><div class="color-grid"><div class="color-option" style="background: rgba(255,255,255,0.92)" onclick="setWidgetBackground('${id}', 'rgba(255,255,255,0.92)')"></div><div class="color-option" style="background: transparent" onclick="setWidgetBackground('${id}', 'transparent')"><i class="fas fa-slash"></i></div><div class="color-option" style="background: rgba(235, 248, 255, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(235, 248, 255, 0.9)')"></div><div class="color-option" style="background: rgba(240, 255, 244, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(240, 255, 244, 0.9)')"></div><div class="color-option" style="background: rgba(45, 55, 72, 0.9)" onclick="setWidgetBackground('${id}', 'rgba(45, 55, 72, 0.9)')"></div></div></div></div><div class="widget-body">${bodyHTML}</div>`;
+            canvas.appendChild(widget); makeDraggableAndResizable(widget);
             if (type === 'clock') initClock(id);
-            setActiveWidget(widget);
-            return widget;
+            setActiveWidget(widget); return widget;
         }
 
         function initClock(id) {
@@ -581,63 +585,63 @@
             w.timerPaused = false; playBtn.innerHTML = '<i class="fas fa-pause"></i>'; playBtn.classList.add('bg-orange-500');
             w.interval = setInterval(() => {
                 if (w.timerPaused) return; w.timerLeft--;
-                const mins = Math.floor(w.timerLeft/60), secs = w.timerLeft%60;
-                const txt = document.getElementById(`${id}-txt`); if(txt) txt.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+                const txt = document.getElementById(`${id}-txt`); if(txt) txt.innerText = `${Math.floor(w.timerLeft/60)}:${(w.timerLeft%60).toString().padStart(2, '0')}`;
                 const vis = document.getElementById(`${id}-visual`);
                 if(vis) {
                     vis.style.setProperty('--progress', `${(w.timerLeft/w.timerTotal)*100}%`);
-                    const color = w.timerLeft < 60 ? '#f56565' : '#48bb78'; vis.style.setProperty('--timer-color', color);
+                    vis.style.setProperty('--timer-color', w.timerLeft < 60 ? '#f56565' : '#48bb78');
                 }
                 if(w.timerLeft <= 0) { 
                     clearInterval(w.interval); w.interval = null; playBtn.innerHTML = '<i class="fas fa-play"></i>'; playBtn.classList.remove('bg-orange-500');
-                    showStatus("Tiden är ute!", "success"); const soundBtn = document.getElementById(`${id}-sound-btn`);
-                    if(soundBtn && soundBtn.getAttribute('data-sound') === 'on') playAlarm();
+                    if(document.getElementById(`${id}-sound-btn`).getAttribute('data-sound') === 'on') playAlarm();
                 }
             }, 1000);
         }
 
         function resetTimer(id) {
             const w = document.getElementById(id); if(w.interval) { clearInterval(w.interval); w.interval = null; }
-            w.timerPaused = false; const playBtn = document.getElementById(`${id}-play-btn`); if (playBtn) { playBtn.innerHTML = '<i class="fas fa-play"></i>'; playBtn.classList.remove('bg-orange-500'); }
+            w.timerPaused = false; document.getElementById(`${id}-play-btn`).innerHTML = '<i class="fas fa-play"></i>';
             const val = document.getElementById(`${id}-input`).value;
-            const txt = document.getElementById(`${id}-txt`); const vis = document.getElementById(`${id}-visual`);
-            if(txt) txt.innerText = `${val}:00`; if(vis) { vis.style.setProperty('--progress', '100%'); vis.style.setProperty('--timer-color', '#48bb78'); }
+            document.getElementById(`${id}-txt`).innerText = `${val}:00`;
+            const vis = document.getElementById(`${id}-visual`); if(vis) { vis.style.setProperty('--progress', '100%'); vis.style.setProperty('--timer-color', '#48bb78'); }
         }
 
         function toggleTimerSound(id) {
-            const btn = document.getElementById(`${id}-sound-btn`); const state = btn.getAttribute('data-sound');
-            if(state === 'on') { btn.setAttribute('data-sound', 'off'); btn.innerHTML = '<i class="fas fa-volume-mute"></i>'; btn.classList.replace('bg-blue-100', 'bg-gray-200'); btn.classList.replace('text-blue-600', 'text-gray-500'); }
-            else { btn.setAttribute('data-sound', 'on'); btn.innerHTML = '<i class="fas fa-volume-up"></i>'; btn.classList.replace('bg-gray-200', 'bg-blue-100'); btn.classList.replace('text-gray-500', 'text-blue-600'); }
+            const btn = document.getElementById(`${id}-sound-btn`);
+            const on = btn.getAttribute('data-sound') === 'on';
+            btn.setAttribute('data-sound', on ? 'off' : 'on');
+            btn.innerHTML = on ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+            btn.classList.toggle('bg-blue-100', !on); btn.classList.toggle('bg-gray-200', on);
         }
 
         function playAlarm() {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)(); const now = ctx.currentTime; const freq = 880;
-            const beep = (startTime) => {
-                const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination);
-                osc.type = 'sine'; osc.frequency.value = freq; gain.gain.setValueAtTime(0, startTime); gain.gain.linearRampToValueAtTime(0.5, startTime + 0.02); gain.gain.linearRampToValueAtTime(0, startTime + 0.1); osc.start(startTime); osc.stop(startTime + 0.12);
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const beep = (s) => {
+                const osc = ctx.createOscillator(), gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sine'; osc.frequency.value = 880; gain.gain.setValueAtTime(0, s); gain.gain.linearRampToValueAtTime(0.5, s + 0.02); gain.gain.linearRampToValueAtTime(0, s + 0.1); osc.start(s); osc.stop(s + 0.12);
             };
-            for (let group = 0; group < 3; group++) { const groupStart = now + (group * 0.8); for (let i = 0; i < 3; i++) { beep(groupStart + (i * 0.15)); } }
+            for (let i = 0; i < 3; i++) beep(ctx.currentTime + (i * 0.15));
         }
 
         function addTodoItem(id, text = null, isDone = false) {
             const input = document.getElementById(`todo-input-${id}`); const val = text || input.value.trim(); if (!val) return;
-            const list = document.getElementById(`todo-list-${id}`); const item = document.createElement('div');
+            const list = document.getElementById(`todo-list-${id}`), item = document.createElement('div');
             item.className = `todo-item ${isDone ? 'done' : ''}`;
             item.innerHTML = `<input type="checkbox" onchange="toggleTodo(this)" ${isDone ? 'checked' : ''}><span>${val}</span><i class="fas fa-times delete-btn" onclick="this.parentElement.remove()"></i>`;
-            list.appendChild(item); if (!text) input.value = ''; list.scrollTop = list.scrollHeight;
+            list.appendChild(item); if (!text) input.value = '';
         }
 
         function toggleTodo(cb) { cb.parentElement.classList.toggle('done', cb.checked); }
 
         function addScheduleItem(id) {
-            const subj = document.getElementById(`subj-${id}`).value; const start = document.getElementById(`start-${id}`).value; const end = document.getElementById(`end-${id}`).value; const clr = document.getElementById(`clr-${id}`).value;
-            if (!subj) return; const list = document.getElementById(`list-${id}`); const item = document.createElement('div');
-            item.className = 'schedule-item'; item.style.backgroundColor = clr;
-            item.innerHTML = `<span class="absolute top-1 right-1 cursor-pointer opacity-30 hover:opacity-100" onclick="this.parentElement.remove()"><i class="fas fa-times-circle"></i></span><span class="time-start">${start}</span><span class="subject">${subj}</span><span class="time-end">${end}</span>`;
+            const subj = document.getElementById(`subj-${id}`).value, start = document.getElementById(`start-${id}`).value, end = document.getElementById(`end-${id}`).value;
+            if (!subj) return; const list = document.getElementById(`list-${id}`), item = document.createElement('div');
+            item.className = 'schedule-item'; item.style.backgroundColor = '#ffeb3b';
+            item.innerHTML = `<span class="absolute top-1 right-1 cursor-pointer opacity-30" onclick="this.parentElement.remove()"><i class="fas fa-times-circle"></i></span><span class="time-start">${start}</span><span class="subject">${subj}</span><span class="time-end">${end}</span>`;
             list.appendChild(item); document.getElementById(`subj-${id}`).value = '';
         }
 
-        function createSymbolWidget(typeId, icon, label) { const content = `<i class="fas ${icon}"></i><p>${label}</p>`; createWidget('symbol', content, label.toUpperCase()); }
+        function createSymbolWidget(t, i, l) { createWidget('symbol', `<i class="fas ${i}"></i><p>${l}</p>`, l.toUpperCase()); }
 
         function removeWidget(id) {
             const w = document.getElementById(id); if (!w) return;
@@ -646,147 +650,111 @@
         }
 
         async function toggleMic(id) {
-            const w = document.getElementById(id); const b = w.querySelector(`button`);
-            if(w.micStream) {
-                w.micStream.getTracks().forEach(t => t.stop()); w.micStream = null; b.innerText = "MIKROFON"; b.classList.replace('bg-red-500', 'bg-gray-900');
-                document.getElementById(`sf-${id}`).style.width = '0%'; return;
-            }
+            const w = document.getElementById(id), b = w.querySelector(`button`);
+            if(w.micStream) { w.micStream.getTracks().forEach(t => t.stop()); w.micStream = null; b.innerText = "MIKROFON"; document.getElementById(`sf-${id}`).style.width = '0%'; return; }
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); w.micStream = stream;
                 const ctx = new AudioContext(), ana = ctx.createAnalyser(); ctx.createMediaStreamSource(stream).connect(ana);
-                b.classList.replace('bg-gray-900', 'bg-red-500');
+                b.innerText = "AVSLUTA";
                 const update = () => {
                     if(!w.micStream) return; const d = new Uint8Array(ana.frequencyBinCount); ana.getByteFrequencyData(d);
-                    const avg = d.reduce((a,b)=>a+b)/d.length; document.getElementById(`sf-${id}`).style.width = Math.min(avg*2.5, 100) + "%"; requestAnimationFrame(update);
+                    document.getElementById(`sf-${id}`).style.width = Math.min((d.reduce((a,b)=>a+b)/d.length)*2.5, 100) + "%"; requestAnimationFrame(update);
                 }; update();
             } catch(e) { showStatus("Mikrofonåtkomst krävs.", "error"); }
         }
 
-        function handleWidgetImg(input, widgetId) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const container = document.getElementById(`img-cont-${widgetId}`);
-                    container.innerHTML = `<img src="${e.target.result}" alt="Widget bild">`; container.classList.remove('bg-gray-50', 'border-dashed', 'border-2');
-                };
-                reader.readAsDataURL(file);
+        function handleWidgetImg(i, id) {
+            const f = i.files[0]; if (f) {
+                const r = new FileReader(); r.onload = (e) => {
+                    const c = document.getElementById(`img-cont-${id}`);
+                    c.innerHTML = `<img src="${e.target.result}">`; c.classList.remove('bg-gray-50', 'border-dashed', 'border-2');
+                }; r.readAsDataURL(f);
             }
         }
 
-        // SPOTIFY LOGIK
         function showSpotifyInput(id) {
-            const container = document.getElementById(`spot-cont-${id}`);
-            container.classList.add('bg-gray-900', 'border-2', 'border-dashed', 'border-green-500');
-            container.innerHTML = `
-                <div id="spot-input-grp-${id}" class="w-full flex flex-col gap-2 p-4">
-                    <input type="text" id="spot-link-${id}" placeholder="Klistra in Spotify-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white border border-green-900 focus:border-green-500 outline-none no-drag">
-                    <button onclick="handleSpotifySubmit('${id}')" class="bg-green-500 text-black font-bold py-1.5 px-3 rounded text-xs hover:bg-green-400 transition-colors no-drag">LADDA SPELARE</button>
-                    <p class="text-[10px] text-gray-400 text-center mt-1 italic">Obs: För hela låtar krävs inloggning på Spotify i denna webbläsare.</p>
-                </div>
-            `;
+            document.getElementById(`spot-cont-${id}`).innerHTML = `
+                <div class="w-full flex flex-col gap-2 p-4">
+                    <input type="text" id="spot-link-${id}" placeholder="Spotify-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white no-drag">
+                    <button onclick="handleSpotifySubmit('${id}')" class="bg-green-500 py-1.5 rounded text-xs font-bold no-drag">LADDA</button>
+                </div>`;
         }
 
         function handleSpotifySubmit(id) {
-            const input = document.getElementById(`spot-link-${id}`);
-            const link = input.value.trim();
+            const link = document.getElementById(`spot-link-${id}`).value;
             if (link) updateSpotifyEmbed(id, link);
-            else showStatus("Vänligen klistra in en länk.", "error");
         }
 
         function updateSpotifyEmbed(id, link) {
-            let embedUrl = link;
+            let url = link;
             if (link.includes("spotify.com")) {
                 const parts = link.split('?')[0].split('/');
-                const type = parts[parts.length - 2]; 
-                const spotId = parts[parts.length - 1];
-                embedUrl = `https://open.spotify.com/embed/${type}/${spotId}`;
+                url = `https://open.spotify.com/embed/${parts[parts.length-2]}/${parts[parts.length-1]}`;
             }
-            const container = document.getElementById(`spot-cont-${id}`);
-            container.innerHTML = `<iframe class="no-drag" src="${embedUrl}" width="100%" height="100%" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`;
-            container.classList.remove('bg-gray-900', 'border-2', 'border-dashed', 'border-green-500');
-            container.setAttribute('data-link', link);
+            const c = document.getElementById(`spot-cont-${id}`);
+            c.innerHTML = `<iframe class="no-drag" src="${url}" width="100%" height="100%" frameborder="0" allow="encrypted-media"></iframe>`;
+            c.setAttribute('data-link', link);
         }
 
-        // YOUTUBE LOGIK
         function showYouTubeInput(id) {
-            const container = document.getElementById(`yt-cont-${id}`);
-            container.classList.add('bg-gray-900', 'border-2', 'border-dashed', 'border-red-500');
-            container.innerHTML = `
-                <div id="yt-input-grp-${id}" class="w-full flex flex-col gap-2 p-4 text-center">
-                    <input type="text" id="yt-link-${id}" placeholder="YouTube-länk eller ID..." class="w-full p-2 text-xs rounded bg-gray-800 text-white border border-red-900 focus:border-red-500 outline-none no-drag">
-                    <button onclick="handleYouTubeSubmit('${id}')" class="bg-red-600 text-white font-bold py-1.5 px-3 rounded text-xs hover:bg-red-500 transition-colors no-drag">LADDA VIDEO</button>
-                    <p class="text-[10px] text-gray-400 mt-1 italic text-center">Tips: YouTube har inget 30-sekunders krav!</p>
-                </div>
-            `;
+            document.getElementById(`yt-cont-${id}`).innerHTML = `
+                <div class="w-full flex flex-col gap-2 p-4">
+                    <input type="text" id="yt-link-${id}" placeholder="YouTube-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white no-drag">
+                    <button onclick="handleYouTubeSubmit('${id}')" class="bg-red-600 text-white py-1.5 rounded text-xs font-bold no-drag">LADDA</button>
+                </div>`;
         }
 
         function handleYouTubeSubmit(id) {
-            const input = document.getElementById(`yt-link-${id}`);
-            const link = input.value.trim();
+            const link = document.getElementById(`yt-link-${id}`).value;
             if (link) updateYouTubeEmbed(id, link);
-            else showStatus("Vänligen klistra in en YouTube-länk.", "error");
         }
 
         function updateYouTubeEmbed(id, link) {
-            let videoId = link;
-            if (link.includes("v=")) videoId = link.split("v=")[1].split("&")[0];
-            else if (link.includes("youtu.be/")) videoId = link.split("youtu.be/")[1].split("?")[0];
-            else if (link.includes("embed/")) videoId = link.split("embed/")[1].split("?")[0];
-            
-            const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-            const container = document.getElementById(`yt-cont-${id}`);
-            container.innerHTML = `<iframe class="no-drag" width="100%" height="100%" src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-            container.classList.remove('bg-gray-900', 'border-2', 'border-dashed', 'border-red-500');
-            container.setAttribute('data-link', link);
+            let vid = link;
+            if (link.includes("v=")) vid = link.split("v=")[1].split("&")[0];
+            else if (link.includes("youtu.be/")) vid = link.split("youtu.be/")[1].split("?")[0];
+            const c = document.getElementById(`yt-cont-${id}`);
+            c.innerHTML = `<iframe class="no-drag" width="100%" height="100%" src="https://www.youtube.com/embed/${vid}" frameborder="0" allowfullscreen></iframe>`;
+            c.setAttribute('data-link', link);
         }
 
         function exportLayoutToFile() {
-            const widgets = [];
+            const ws = [];
             document.querySelectorAll('.widget').forEach(w => {
-                const type = w.getAttribute('data-type'); const id = w.id;
-                const state = { id, type, top: w.style.top, left: w.style.left, width: w.style.width, height: w.style.height, data: {} };
-                if (type === 'text') state.data.html = document.getElementById(`tx-${id}`).innerHTML;
-                if (type === 'image') { const img = w.querySelector('.image-widget-container img'); if (img) state.data.src = img.src; }
-                if (type === 'spotify') { const cont = document.getElementById(`spot-cont-${id}`); state.data.link = cont.getAttribute('data-link'); }
-                if (type === 'youtube') { const cont = document.getElementById(`yt-cont-${id}`); state.data.link = cont.getAttribute('data-link'); }
-                if (type === 'schedule') state.data.items = Array.from(w.querySelectorAll('.schedule-item')).map(i => ({ subj: i.querySelector('.subject').innerText, start: i.querySelector('.time-start').innerText, end: i.querySelector('.time-end').innerText, clr: i.style.backgroundColor }));
-                if (type === 'todo') state.data.items = Array.from(w.querySelectorAll('.todo-item')).map(i => ({ text: i.querySelector('span').innerText, done: i.querySelector('input[type="checkbox"]').checked }));
-                if (type === 'symbol') state.data.html = w.querySelector('.symbol-widget-content').innerHTML;
-                if (type === 'clock') state.data.mode = w.getAttribute('data-mode') || 'digital';
-                if (type === 'timer') { const btn = document.getElementById(`${id}-sound-btn`); if (btn) state.data.sound = btn.getAttribute('data-sound'); }
-                state.backgroundColor = w.getAttribute('data-bg') || 'rgba(255,255,255,0.92)'; widgets.push(state);
+                const s = { id: w.id, type: w.getAttribute('data-type'), top: w.style.top, left: w.style.left, width: w.style.width, height: w.style.height, bg: w.getAttribute('data-bg'), data: {} };
+                if (s.type === 'text') s.data.html = document.getElementById(`tx-${w.id}`).innerHTML;
+                if (s.type === 'image') s.data.src = w.querySelector('img')?.src;
+                if (s.type === 'spotify') s.data.link = document.getElementById(`spot-cont-${w.id}`).getAttribute('data-link');
+                if (s.type === 'youtube') s.data.link = document.getElementById(`yt-cont-${w.id}`).getAttribute('data-link');
+                if (s.type === 'todo') s.data.items = Array.from(w.querySelectorAll('.todo-item')).map(i=>({text:i.querySelector('span').innerText, done:i.querySelector('input').checked}));
+                if (s.type === 'schedule') s.data.items = Array.from(w.querySelectorAll('.schedule-item')).map(i=>({subject:i.querySelector('.subject').innerText, start:i.querySelector('.time-start').innerText, end:i.querySelector('.time-end').innerText}));
+                if (s.type === 'symbol') s.data.html = w.querySelector('.symbol-widget-content').innerHTML;
+                ws.push(s);
             });
-            const layer = document.getElementById('background-layer');
-            const blob = new Blob([JSON.stringify({ background: layer.style.backgroundImage, backgroundColor: layer.style.backgroundColor, widgets }, null, 2)], { type: "application/json" });
+            const blob = new Blob([JSON.stringify({ bg: document.getElementById('background-layer').style.backgroundImage, widgets: ws }, null, 2)], { type: "application/json" });
             const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `layout-${new Date().toISOString().slice(0,10)}.json`; a.click();
         }
 
         function importLayoutFromFile(input) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = JSON.parse(e.target.result); document.querySelectorAll('.widget').forEach(w => removeWidget(w.id));
-                const layer = document.getElementById('background-layer'); if (data.background) layer.style.backgroundImage = data.background; if (data.backgroundColor) layer.style.backgroundColor = data.backgroundColor;
-                data.widgets.forEach(s => {
+            const r = new FileReader(); r.onload = (e) => {
+                const d = JSON.parse(e.target.result); document.querySelectorAll('.widget').forEach(w => removeWidget(w.id));
+                if (d.bg) document.getElementById('background-layer').style.backgroundImage = d.bg;
+                d.widgets.forEach(s => {
                     const w = createWidget(s.type, null, null, s.id); w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
-                    if (s.backgroundColor) setWidgetBackground(s.id, s.backgroundColor);
-                    if (s.type === 'image' && s.data.src) { const container = document.getElementById(`img-cont-${s.id}`); container.innerHTML = `<img src="${s.data.src}" alt="Widget bild">`; container.classList.remove('bg-gray-50', 'border-dashed', 'border-2'); }
+                    if (s.bg) setWidgetBackground(s.id, s.bg);
+                    if (s.type === 'image' && s.data.src) { const c = document.getElementById(`img-cont-${s.id}`); c.innerHTML = `<img src="${s.data.src}">`; c.classList.remove('border-dashed'); }
                     if (s.type === 'spotify' && s.data.link) updateSpotifyEmbed(s.id, s.data.link);
                     if (s.type === 'youtube' && s.data.link) updateYouTubeEmbed(s.id, s.data.link);
-                    if (s.type === 'text') { const tx = document.getElementById(`tx-${s.id}`); if(tx) tx.innerHTML = s.data.html || ''; }
-                    if (s.type === 'schedule' && s.data.items) { const list = document.getElementById(`list-${s.id}`); s.data.items.forEach(item => { const div = document.createElement('div'); div.className = 'schedule-item'; div.style.backgroundColor = item.clr; div.innerHTML = `<span class="absolute top-1 right-1 cursor-pointer opacity-30 hover:opacity-100" onclick="this.parentElement.remove()"><i class="fas fa-times-circle"></i></span><span class="time-start">${item.start}</span><span class="subject">${item.subject || item.subj}</span><span class="time-end">${item.end}</span>`; list.appendChild(div); }); }
-                    if (s.type === 'todo' && s.data.items) s.data.items.forEach(item => addTodoItem(s.id, item.text, item.done));
-                    if (s.type === 'symbol') { const content = w.querySelector('.symbol-widget-content'); if(content) content.innerHTML = s.data.html; }
-                    if (s.type === 'clock') setClockMode(s.id, s.data.mode || 'digital');
-                    if (s.type === 'timer' && s.data.sound === 'off') toggleTimerSound(s.id);
-                });
-                showStatus("Layout laddad!");
-            };
-            reader.readAsText(input.files[0]);
+                    if (s.type === 'text') document.getElementById(`tx-${s.id}`).innerHTML = s.data.html;
+                    if (s.type === 'todo') s.data.items.forEach(i => addTodoItem(s.id, i.text, i.done));
+                    if (s.type === 'schedule') s.data.items.forEach(i => { const div = document.createElement('div'); div.className = 'schedule-item'; div.style.backgroundColor = '#ffeb3b'; div.innerHTML = `<span class="absolute top-1 right-1 cursor-pointer opacity-30" onclick="this.parentElement.remove()"><i class="fas fa-times-circle"></i></span><span class="time-start">${i.start}</span><span class="subject">${i.subject || i.subj}</span><span class="time-end">${i.end}</span>`; document.getElementById(`list-${s.id}`).appendChild(div); });
+                    if (s.type === 'symbol') w.querySelector('.symbol-widget-content').innerHTML = s.data.html;
+                }); showStatus("Laddat!");
+            }; r.readAsText(input.files[0]);
         }
 
-        function showStatus(m, t='info') { const e=document.getElementById('status-msg'); e.innerText=m; e.style.display='block'; e.style.backgroundColor=t==='success'?'#c6f6d5':(t==='error'?'#fed7d7':'#e6fffa'); setTimeout(()=>e.style.display='none',3000); }
-        function handleLocalImg(i, widgetId = null) { const f = i.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => setAppBackground('image', e.target.result, widgetId); r.readAsDataURL(f); } }
+        function showStatus(m, t='info') { const e=document.getElementById('status-msg'); e.innerText=m; e.style.display='block'; e.style.backgroundColor=t==='success'?'#c6f6d5':'#e6fffa'; setTimeout(()=>e.style.display='none',3000); }
+        function handleLocalImg(i, id = null) { const f = i.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => setAppBackground('image', e.target.result, id); r.readAsDataURL(f); } }
 
         window.onload = () => { createWidget('clock'); };
     </script>
