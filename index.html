@@ -330,7 +330,6 @@
             <i class="fas fa-comment-dots"></i><span>Symboler</span>
             <div id="menu-symbols" class="submenu">
                 <div class="submenu-item" onclick="createSymbolWidget('tyst', 'fa-volume-mute', 'Tyst')"><i class="fas fa-volume-mute text-gray-600"></i><span>Tyst</span></div>
-                <!-- Ändrad ikon för Viska för bättre tydlighet -->
                 <div class="submenu-item" onclick="createSymbolWidget('viska', 'fa-volume-low', 'Viska')"><i class="fas fa-volume-low text-sky-400"></i><span>Viska</span></div>
                 <div class="submenu-item" onclick="createSymbolWidget('granne', 'fa-user-friends', 'Prata granne')"><i class="fas fa-user-friends text-amber-500"></i><span>Granne</span></div>
                 <div class="submenu-item" onclick="createSymbolWidget('grupp', 'fa-users', 'Grupparbete')"><i class="fas fa-users text-indigo-500"></i><span>Grupp</span></div>
@@ -422,6 +421,7 @@
 
         function setWidgetBackground(id, color) {
             const w = document.getElementById(id);
+            if (!w) return;
             if (color === 'transparent') {
                 w.style.background = 'transparent'; w.style.backdropFilter = 'none'; w.style.boxShadow = 'none';
             } else {
@@ -433,8 +433,15 @@
 
         function setAppBackground(type, value, widgetId = null) {
             const layer = document.getElementById('background-layer');
-            if (type === 'image') { layer.style.backgroundImage = `url('${value}')`; layer.style.backgroundColor = 'transparent'; }
-            else if (type === 'color') { layer.style.backgroundImage = 'none'; layer.style.backgroundColor = value; }
+            if (type === 'image') { 
+                layer.style.backgroundImage = `url('${value}')`; 
+                layer.style.backgroundColor = 'transparent'; 
+            }
+            else if (type === 'color') { 
+                layer.style.backgroundImage = 'none'; 
+                layer.style.backgroundColor = value; 
+            }
+            // Auto-stäng widgeten
             if (widgetId) removeWidget(widgetId);
         }
 
@@ -509,7 +516,7 @@
                     break;
                 case 'spotify':
                     toolbarExtra = `<div class="toolbar-btn" onclick="showSpotifyInput('${id}')"><i class="fab fa-spotify text-green-500"></i></div>`;
-                    bodyHTML = `<div class="widget-body p-0"><div id="spot-cont-${id}" class="spotify-container flex flex-col items-center justify-center bg-gray-900 border-2 border-green-500 border-dashed w-full h-full p-4"><div id="spot-input-grp-${id}" class="w-full flex flex-col gap-2"><input type="text" id="spot-link-${id}" placeholder="Spotify-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white border border-green-900 outline-none no-drag"><button onclick="handleSpotifySubmit('${id}')" class="bg-green-500 text-black font-bold py-1.5 px-3 rounded text-xs hover:bg-green-400 no-drag">LADDA</button><p class="text-[10px] text-gray-400 text-center mt-1 italic">Logga in på Spotify i webbläsaren för hela låtar.</p></div></div></div>`;
+                    bodyHTML = `<div class="widget-body p-0"><div id="spot-cont-${id}" class="spotify-container flex flex-col items-center justify-center bg-gray-900 border-2 border-green-500 border-dashed w-full h-full p-4"><div id="spot-input-grp-${id}" class="w-full flex flex-col gap-2"><input type="text" id="spot-link-${id}" placeholder="Klistra in Spotify-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white border border-green-900 outline-none no-drag"><button onclick="handleSpotifySubmit('${id}')" class="bg-green-500 text-black font-bold py-1.5 px-3 rounded text-xs hover:bg-green-400 no-drag">LADDA</button><p class="text-[10px] text-gray-400 text-center mt-1 italic">Logga in på Spotify i webbläsaren för hela låtar.</p></div></div></div>`;
                     break;
                 case 'youtube':
                     toolbarExtra = `<div class="toolbar-btn" onclick="showYouTubeInput('${id}')"><i class="fab fa-youtube text-red-600"></i></div>`;
@@ -526,7 +533,24 @@
                     bodyHTML = `<div id="list-${id}" class="widget-body space-y-2 mb-2 overflow-y-auto block w-full no-drag"></div><div class="border-t pt-2 space-y-1 w-full no-drag"><input type="text" id="subj-${id}" placeholder="Ämne..." class="w-full p-1 border rounded text-[0.65rem]"><div class="flex gap-1"><input type="text" id="start-${id}" placeholder="08.10" class="w-1/2 p-1 border rounded text-[0.65rem]"><input type="text" id="end-${id}" placeholder="09.00" class="w-1/2 p-1 border rounded text-[0.65rem]"></div><button onclick="addScheduleItem('${id}')" class="w-full bg-black text-white p-1 rounded-lg text-[0.65rem]">+ LÄGG TILL</button></div>`;
                     break;
                 case 'background':
-                    bodyHTML = `<div class="widget-body p-2 overflow-y-auto"><button onclick="document.getElementById('bg-in-${id}').click()" class="bg-blue-50 text-blue-600 border border-blue-200 p-3 rounded-xl text-xs font-bold w-full mb-4 no-drag">VÄLJ BILD</button><input type="file" id="bg-in-${id}" class="hidden" accept="image/*" onchange="handleLocalImg(this, '${id}')"><div class="grid grid-cols-4 gap-2 no-drag"><div class="w-full aspect-square rounded-lg border cursor-pointer" style="background: #ffffff" onclick="setAppBackground('color', '#ffffff', '${id}')"></div><div class="w-full aspect-square rounded-lg border cursor-pointer" style="background: #ebf8ff" onclick="setAppBackground('color', '#ebf8ff', '${id}')"></div><div class="w-full aspect-square rounded-lg border cursor-pointer" style="background: #f0fff4" onclick="setAppBackground('color', '#f0fff4', '${id}')"></div><div class="w-full aspect-square rounded-lg border cursor-pointer" style="background: #2d3748" onclick="setAppBackground('color', '#2d3748', '${id}')"></div></div></div>`;
+                    bodyHTML = `
+                        <div class="widget-body p-2 overflow-y-auto">
+                            <div class="text-[0.65rem] font-bold text-gray-400 mb-2 uppercase tracking-wide">Välj bild</div>
+                            <button onclick="document.getElementById('bg-in-${id}').click()" class="bg-blue-50 text-blue-600 border border-blue-200 p-3 rounded-xl text-xs font-bold w-full mb-4 no-drag">LADDA UPP FRÅN DATOR</button>
+                            <input type="file" id="bg-in-${id}" class="hidden" accept="image/*" onchange="handleLocalImg(this, '${id}')">
+                            
+                            <div class="text-[0.65rem] font-bold text-gray-400 mb-2 uppercase tracking-wide">Eller välj färg</div>
+                            <div class="grid grid-cols-4 gap-2 no-drag">
+                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #ffffff" onclick="setAppBackground('color', '#ffffff', '${id}')" title="Vit"></div>
+                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #ebf8ff" onclick="setAppBackground('color', '#ebf8ff', '${id}')" title="Ljusblå"></div>
+                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #f0fff4" onclick="setAppBackground('color', '#f0fff4', '${id}')" title="Ljusgrön"></div>
+                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #fffff0" onclick="setAppBackground('color', '#fffff0', '${id}')" title="Ljusgul"></div>
+                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #fff5f5" onclick="setAppBackground('color', '#fff5f5', '${id}')" title="Ljusrosa"></div>
+                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #faf5ff" onclick="setAppBackground('color', '#faf5ff', '${id}')" title="Ljuslila"></div>
+                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #2d3748" onclick="setAppBackground('color', '#2d3748', '${id}')" title="Mörkgrå"></div>
+                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer flex items-center justify-center bg-gray-100" onclick="setAppBackground('color', '#1a1a1a', '${id}')" title="Svart"><i class="fas fa-moon text-gray-400 text-xs"></i></div>
+                            </div>
+                        </div>`;
                     break;
                 case 'text':
                     bodyHTML = `<div class="widget-body h-full flex flex-col"><div class="text-editor-toolbar no-drag"><div class="editor-btn" onclick="execTextCommand('${id}', 'bold')"><i class="fas fa-bold"></i></div><div class="editor-btn" onclick="execTextCommand('${id}', 'italic')"><i class="fas fa-italic"></i></div><div class="editor-btn" onclick="execTextCommand('${id}', 'insertUnorderedList')"><i class="fas fa-list-ul"></i></div></div><div id="tx-${id}" contenteditable="true" class="rich-text-content no-drag p-2" data-placeholder="Skriv här..."></div></div>`;
@@ -720,6 +744,7 @@
 
         function exportLayoutToFile() {
             const ws = [];
+            const layer = document.getElementById('background-layer');
             document.querySelectorAll('.widget').forEach(w => {
                 const s = { id: w.id, type: w.getAttribute('data-type'), top: w.style.top, left: w.style.left, width: w.style.width, height: w.style.height, bg: w.getAttribute('data-bg'), data: {} };
                 if (s.type === 'text') s.data.html = document.getElementById(`tx-${w.id}`).innerHTML;
@@ -731,14 +756,20 @@
                 if (s.type === 'symbol') s.data.html = w.querySelector('.symbol-widget-content').innerHTML;
                 ws.push(s);
             });
-            const blob = new Blob([JSON.stringify({ bg: document.getElementById('background-layer').style.backgroundImage, widgets: ws }, null, 2)], { type: "application/json" });
+            const blob = new Blob([JSON.stringify({ 
+                bg: layer.style.backgroundImage, 
+                bgColor: layer.style.backgroundColor,
+                widgets: ws 
+            }, null, 2)], { type: "application/json" });
             const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `layout-${new Date().toISOString().slice(0,10)}.json`; a.click();
         }
 
         function importLayoutFromFile(input) {
             const r = new FileReader(); r.onload = (e) => {
                 const d = JSON.parse(e.target.result); document.querySelectorAll('.widget').forEach(w => removeWidget(w.id));
-                if (d.bg) document.getElementById('background-layer').style.backgroundImage = d.bg;
+                const layer = document.getElementById('background-layer');
+                if (d.bg) layer.style.backgroundImage = d.bg;
+                if (d.bgColor) layer.style.backgroundColor = d.bgColor;
                 d.widgets.forEach(s => {
                     const w = createWidget(s.type, null, null, s.id); w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
                     if (s.bg) setWidgetBackground(s.id, s.bg);
@@ -754,7 +785,15 @@
         }
 
         function showStatus(m, t='info') { const e=document.getElementById('status-msg'); e.innerText=m; e.style.display='block'; e.style.backgroundColor=t==='success'?'#c6f6d5':'#e6fffa'; setTimeout(()=>e.style.display='none',3000); }
-        function handleLocalImg(i, id = null) { const f = i.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => setAppBackground('image', e.target.result, id); r.readAsDataURL(f); } }
+        
+        function handleLocalImg(i, id = null) { 
+            const f = i.files[0]; 
+            if(f){ 
+                const r = new FileReader(); 
+                r.onload = (e) => setAppBackground('image', e.target.result, id); 
+                r.readAsDataURL(f); 
+            } 
+        }
 
         window.onload = () => { createWidget('clock'); };
     </script>
