@@ -37,9 +37,9 @@
             backdrop-filter: blur(10px);
             border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            padding: 10px;
-            min-width: 150px;
-            min-height: 100px;
+            padding: 12px;
+            min-width: 180px;
+            min-height: 120px;
             cursor: move;
             user-select: none;
             touch-action: none;
@@ -55,7 +55,17 @@
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), 0 12px 40px rgba(0,0,0,0.2);
         }
 
-        /* Flytande verktygsrad */
+        /* Resize Handtag */
+        .resizer { position: absolute; z-index: 100; }
+        .resizer-n { top: -4px; left: 0; right: 0; height: 10px; cursor: ns-resize; }
+        .resizer-s { bottom: -4px; left: 0; right: 0; height: 10px; cursor: ns-resize; }
+        .resizer-e { top: 0; bottom: 0; right: -4px; width: 10px; cursor: ew-resize; }
+        .resizer-w { top: 0; bottom: 0; left: -4px; width: 10px; cursor: ew-resize; }
+        .resizer-nw { top: -6px; left: -6px; width: 15px; height: 15px; cursor: nwse-resize; }
+        .resizer-ne { top: -6px; right: -6px; width: 15px; height: 15px; cursor: nesw-resize; }
+        .resizer-sw { bottom: -6px; left: -6px; width: 15px; height: 15px; cursor: nesw-resize; }
+        .resizer-se { bottom: -6px; right: -6px; width: 15px; height: 15px; cursor: nwse-resize; }
+
         .widget-toolbar {
             position: absolute;
             top: -45px;
@@ -72,9 +82,7 @@
             white-space: nowrap;
         }
 
-        .widget.active .widget-toolbar {
-            display: flex;
-        }
+        .widget.active .widget-toolbar { display: flex; }
 
         .toolbar-btn {
             color: #555;
@@ -89,7 +97,6 @@
         .toolbar-btn:hover { color: #000; }
         .toolbar-btn.delete:hover { color: #ef4444; }
 
-        /* Inställningsmeny för färg */
         .settings-popover {
             position: absolute;
             top: 40px;
@@ -122,18 +129,8 @@
             width: 100%;
             height: 100%;
         }
-
-        .resize-handle {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            width: 20px;
-            height: 20px;
-            cursor: nwse-resize;
-            z-index: 100;
-        }
         
-        /* Skalningslogik */
+        /* Widget Specifika Stilar */
         .clock-display { font-size: 25cqmin; font-weight: 800; line-height: 1; text-align: center; }
         .analog-clock-wrapper { width: 92cqmin; height: 92cqmin; position: relative; }
         .analog-clock { width: 100%; height: 100%; border: 1.8cqmin solid #333; border-radius: 50%; background: white; position: relative; }
@@ -148,8 +145,9 @@
 
         .visual-timer-circle {
             width: 88cqmin; height: 88cqmin; border-radius: 50%;
-            background: conic-gradient(#f56565 var(--progress), #edf2f7 0);
+            background: conic-gradient(var(--timer-color, #48bb78) var(--progress), #edf2f7 0);
             position: relative; display: flex; align-items: center; justify-content: center;
+            transition: background 0.3s ease;
         }
         .visual-timer-circle::after { content: ''; position: absolute; top: 3.5%; left: 3.5%; right: 3.5%; bottom: 3.5%; background: white; border-radius: 50%; z-index: 10; }
         .timer-display { font-size: 22cqmin; font-weight: 800; color: #1a202c; position: relative; z-index: 20; }
@@ -163,52 +161,16 @@
         .schedule-item .time-end { position: absolute; bottom: 6px; right: 10px; font-size: 0.7rem; font-weight: 700; opacity: 0.7; }
         .schedule-item .subject { font-weight: 800; font-size: 1.1rem; text-align: center; }
 
-        /* Rich Text Editor Styling */
-        .text-editor-toolbar {
-            display: flex;
-            gap: 4px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-            width: 100%;
-        }
-        .editor-btn {
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            color: #4a5568;
-            transition: all 0.2s;
-        }
+        .text-editor-toolbar { display: flex; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.1); margin-bottom: 8px; flex-wrap: wrap; width: 100%; }
+        .editor-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-size: 0.8rem; color: #4a5568; transition: all 0.2s; }
         .editor-btn:hover { background: rgba(0,0,0,0.05); color: #000; }
         .editor-btn.active { background: #ebf8ff; color: #3182ce; }
-        .editor-select {
-            font-size: 0.7rem;
-            padding: 2px 4px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            background: white;
-            outline: none;
-        }
+        .editor-select { font-size: 0.7rem; padding: 2px 4px; border-radius: 4px; border: 1px solid #ddd; background: white; outline: none; }
 
-        .rich-text-content {
-            width: 100%;
-            height: 100%;
-            outline: none;
-            overflow-y: auto;
-            text-align: left;
-            align-self: flex-start;
-            line-height: 1.5;
-        }
+        .rich-text-content { width: 100%; height: 100%; outline: none; overflow-y: auto; text-align: left; align-self: flex-start; line-height: 1.5; }
         .rich-text-content ul { list-style-type: disc; padding-left: 1.5rem; }
         .rich-text-content ol { list-style-type: decimal; padding-left: 1.5rem; }
 
-        /* Todo List Styles */
         .todo-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.05); animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .todo-item:last-child { border-bottom: none; }
@@ -218,7 +180,7 @@
         .todo-item .delete-btn { color: #cbd5e0; cursor: pointer; transition: color 0.2s; font-size: 0.9rem; padding: 4px; }
         .todo-item .delete-btn:hover { color: #e53e3e; }
 
-        /* Bottenmeny */
+        /* Bottenmeny Logik */
         #bottom-nav {
             position: fixed;
             bottom: 20px;
@@ -232,6 +194,39 @@
             gap: 12px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.25);
             z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Läget för helskärm/biograf döljer menyn */
+        body.is-fullscreen #bottom-nav,
+        body.is-theater-mode #bottom-nav {
+            transform: translateX(-50%) translateY(100px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Detektionsområde vid botten för att visa menyn igen */
+        #bottom-nav-trigger {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0px; /* Standard 0 */
+            z-index: 999;
+        }
+
+        body.is-fullscreen #bottom-nav-trigger,
+        body.is-theater-mode #bottom-nav-trigger {
+            height: 30px; /* Aktiveras i helskärm */
+        }
+        
+        body.is-fullscreen #bottom-nav-trigger:hover + #bottom-nav,
+        body.is-theater-mode #bottom-nav-trigger:hover + #bottom-nav,
+        body.is-fullscreen #bottom-nav:hover,
+        body.is-theater-mode #bottom-nav:hover {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .nav-item {
@@ -259,6 +254,7 @@
     <div id="background-layer"></div>
     <div id="app-canvas" class="w-full h-full relative"></div>
 
+    <div id="bottom-nav-trigger"></div>
     <nav id="bottom-nav">
         <div class="nav-item" onclick="createWidget('background')"><i class="fas fa-image"></i><span>Bakgrund</span></div>
         <div class="nav-item" onclick="createWidget('clock')"><i class="fas fa-clock"></i><span>Klocka</span></div>
@@ -282,6 +278,7 @@
         
         <div class="nav-item text-green-600 border-l pl-4 ml-2" onclick="exportLayoutToFile()"><i class="fas fa-file-download"></i><span>Spara</span></div>
         <div class="nav-item text-blue-600" onclick="document.getElementById('import-file-input').click()"><i class="fas fa-file-upload"></i><span>Öppna</span><input type="file" id="import-file-input" class="hidden" accept=".json" onchange="importLayoutFromFile(this)"></div>
+        <div class="nav-item text-purple-600" id="fullscreen-btn" onclick="toggleFullscreen()"><i class="fas fa-expand"></i><span>Helskärm</span></div>
     </nav>
 
     <script>
@@ -314,6 +311,55 @@
                 activeWidget.style.zIndex = ++zIndexCounter;
             }
         }
+
+        // Förbättrad helskärm med Biografläge som backup
+        function toggleFullscreen() {
+            if (!document.fullscreenElement && !document.body.classList.contains('is-theater-mode')) {
+                // Försök aktivera riktig helskärm
+                document.documentElement.requestFullscreen()
+                .catch(err => {
+                    // Om det nekas (disallowed by policy), kör "Biografläge" istället
+                    activateTheaterMode();
+                });
+            } else {
+                // Stäng av oavsett vilket läge som är aktivt
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+                deactivateTheaterMode();
+            }
+        }
+
+        function activateTheaterMode() {
+            document.body.classList.add('is-theater-mode');
+            const btn = document.getElementById('fullscreen-btn');
+            btn.innerHTML = '<i class="fas fa-compress"></i><span>Stäng</span>';
+            showStatus("Biografläge aktiverat (Helskärm blockerad av webbläsaren)");
+        }
+
+        function deactivateTheaterMode() {
+            document.body.classList.remove('is-theater-mode');
+            const btn = document.getElementById('fullscreen-btn');
+            btn.innerHTML = '<i class="fas fa-expand"></i><span>Helskärm</span>';
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.getElementById('fullscreen-btn');
+            if (document.fullscreenElement) {
+                document.body.classList.add('is-fullscreen');
+                btn.innerHTML = '<i class="fas fa-compress"></i><span>Stäng</span>';
+            } else {
+                document.body.classList.remove('is-fullscreen');
+                deactivateTheaterMode();
+            }
+        });
+
+        // Stöd för ESC-tangent för att stänga Biografläge
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape" && document.body.classList.contains('is-theater-mode')) {
+                deactivateTheaterMode();
+            }
+        });
 
         function toggleSettingsMenu(e, id) {
             e.stopPropagation();
@@ -371,16 +417,17 @@
         }
 
         function makeDraggableAndResizable(el) {
-            const handle = el.querySelector('.resize-handle');
-            let isDragging = false, isResizing = false;
-            let startX, startY, startWidth, startHeight;
+            let isDragging = false;
+            let currentResizer = null;
+            let startX, startY, startWidth, startHeight, startLeft, startTop;
 
             el.addEventListener('mousedown', (e) => {
-                if (e.target.closest('.no-drag') || e.target.closest('.toolbar-btn') || e.target.closest('.settings-popover')) return;
+                if (e.target.closest('.no-drag') || e.target.closest('.toolbar-btn') || e.target.closest('.settings-popover') || e.target.closest('.resizer')) return;
                 setActiveWidget(el);
                 isDragging = true;
                 startX = e.clientX - el.offsetLeft;
                 startY = e.clientY - el.offsetTop;
+                
                 const onMove = (e) => {
                     if (isDragging) {
                         el.style.left = (e.clientX - startX) + 'px';
@@ -396,25 +443,64 @@
                 document.addEventListener('mouseup', endMove);
             });
 
-            handle.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-                setActiveWidget(el);
-                isResizing = true;
-                startX = e.clientX; startY = e.clientY;
-                startWidth = el.offsetWidth; startHeight = el.offsetHeight;
-                const onResize = (e) => {
-                    if (isResizing) {
-                        el.style.width = Math.max(150, startWidth + (e.clientX - startX)) + 'px';
-                        el.style.height = Math.max(100, startHeight + (e.clientY - startY)) + 'px';
-                    }
-                };
-                const endResize = () => {
-                    isResizing = false;
-                    document.removeEventListener('mousemove', onResize);
-                    document.removeEventListener('mouseup', endResize);
-                };
-                document.addEventListener('mousemove', onResize);
-                document.addEventListener('mouseup', endResize);
+            const resizers = el.querySelectorAll('.resizer');
+            resizers.forEach(resizer => {
+                resizer.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setActiveWidget(el);
+                    
+                    currentResizer = resizer;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startWidth = el.offsetWidth;
+                    startHeight = el.offsetHeight;
+                    startLeft = el.offsetLeft;
+                    startTop = el.offsetTop;
+
+                    const onResize = (e) => {
+                        if (!currentResizer) return;
+                        const dx = e.clientX - startX;
+                        const dy = e.clientY - startY;
+                        
+                        if (currentResizer.classList.contains('resizer-e')) {
+                            el.style.width = Math.max(180, startWidth + dx) + 'px';
+                        } else if (currentResizer.classList.contains('resizer-w')) {
+                            const newWidth = Math.max(180, startWidth - dx);
+                            if (newWidth !== 180) { el.style.width = newWidth + 'px'; el.style.left = (startLeft + dx) + 'px'; }
+                        } else if (currentResizer.classList.contains('resizer-s')) {
+                            el.style.height = Math.max(120, startHeight + dy) + 'px';
+                        } else if (currentResizer.classList.contains('resizer-n')) {
+                            const newHeight = Math.max(120, startHeight - dy);
+                            if (newHeight !== 120) { el.style.height = newHeight + 'px'; el.style.top = (startTop + dy) + 'px'; }
+                        } else if (currentResizer.classList.contains('resizer-se')) {
+                            el.style.width = Math.max(180, startWidth + dx) + 'px';
+                            el.style.height = Math.max(120, startHeight + dy) + 'px';
+                        } else if (currentResizer.classList.contains('resizer-sw')) {
+                            const newWidth = Math.max(180, startWidth - dx);
+                            el.style.height = Math.max(120, startHeight + dy) + 'px';
+                            if (newWidth !== 180) { el.style.width = newWidth + 'px'; el.style.left = (startLeft + dx) + 'px'; }
+                        } else if (currentResizer.classList.contains('resizer-ne')) {
+                            const newHeight = Math.max(120, startHeight - dy);
+                            el.style.width = Math.max(180, startWidth + dx) + 'px';
+                            if (newHeight !== 120) { el.style.height = newHeight + 'px'; el.style.top = (startTop + dy) + 'px'; }
+                        } else if (currentResizer.classList.contains('resizer-nw')) {
+                            const newWidth = Math.max(180, startWidth - dx);
+                            const newHeight = Math.max(120, startHeight - dy);
+                            if (newWidth !== 180) { el.style.width = newWidth + 'px'; el.style.left = (startLeft + dx) + 'px'; }
+                            if (newHeight !== 120) { el.style.height = newHeight + 'px'; el.style.top = (startTop + dy) + 'px'; }
+                        }
+                    };
+
+                    const endResize = () => {
+                        currentResizer = null;
+                        document.removeEventListener('mousemove', onResize);
+                        document.removeEventListener('mouseup', endResize);
+                    };
+
+                    document.addEventListener('mousemove', onResize);
+                    document.addEventListener('mouseup', endResize);
+                });
             });
         }
 
@@ -453,7 +539,7 @@
                 case 'timer':
                     bodyHTML = `
                         <div class="widget-body">
-                            <div class="visual-timer-circle" id="${id}-visual" style="--progress: 100%"><div class="timer-display" id="${id}-txt">10:00</div></div>
+                            <div class="visual-timer-circle" id="${id}-visual" style="--progress: 100%; --timer-color: #48bb78"><div class="timer-display" id="${id}-txt">10:00</div></div>
                         </div>
                         <div class="flex gap-2 mt-2 flex-shrink-0 justify-center no-drag">
                             <input type="number" id="${id}-input" value="10" class="w-12 p-1 border rounded text-xs text-center">
@@ -545,6 +631,15 @@
             }
 
             widget.innerHTML = `
+                <div class="resizer resizer-n"></div>
+                <div class="resizer resizer-s"></div>
+                <div class="resizer resizer-e"></div>
+                <div class="resizer resizer-w"></div>
+                <div class="resizer resizer-nw"></div>
+                <div class="resizer resizer-ne"></div>
+                <div class="resizer resizer-sw"></div>
+                <div class="resizer resizer-se"></div>
+
                 <div class="widget-toolbar">
                     ${toolbarExtra}
                     <div class="toolbar-btn" onclick="toggleSettingsMenu(event, '${id}')"><i class="fas fa-ellipsis-v"></i></div>
@@ -564,7 +659,6 @@
                     </div>
                 </div>
                 <div class="widget-body">${bodyHTML}</div>
-                <div class="resize-handle"></div>
             `;
             canvas.appendChild(widget);
             makeDraggableAndResizable(widget);
@@ -611,45 +705,39 @@
         function toggleTimer(id) {
             const w = document.getElementById(id);
             const playBtn = document.getElementById(`${id}-play-btn`);
-            
             if (w.interval && !w.timerPaused) {
-                // Pausa
                 w.timerPaused = true;
                 playBtn.innerHTML = '<i class="fas fa-play"></i>';
                 playBtn.classList.replace('bg-orange-500', 'bg-blue-500');
-            } else {
-                // Starta eller återuppta
-                startTimer(id);
-            }
+            } else { startTimer(id); }
         }
 
         function startTimer(id) {
             const w = document.getElementById(id);
             const playBtn = document.getElementById(`${id}-play-btn`);
             const input = document.getElementById(`${id}-input`);
-            
             if (w.interval) clearInterval(w.interval);
-            
-            // Om den inte var pausad, läs in nytt värde
             if (!w.timerPaused) {
                 w.timerTotal = parseInt(input.value) * 60;
                 w.timerLeft = w.timerTotal;
             }
-            
             w.timerPaused = false;
             playBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            playBtn.classList.add('bg-orange-500'); // Paus-knappen är orange för att synas
+            playBtn.classList.add('bg-orange-500');
             
             w.interval = setInterval(() => {
                 if (w.timerPaused) return;
-
                 w.timerLeft--;
                 const mins = Math.floor(w.timerLeft/60), secs = w.timerLeft%60;
                 const txt = document.getElementById(`${id}-txt`);
                 if(txt) txt.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
                 
                 const vis = document.getElementById(`${id}-visual`);
-                if(vis) vis.style.setProperty('--progress', `${(w.timerLeft/w.timerTotal)*100}%`);
+                if(vis) {
+                    vis.style.setProperty('--progress', `${(w.timerLeft/w.timerTotal)*100}%`);
+                    const color = w.timerLeft < 60 ? '#f56565' : '#48bb78';
+                    vis.style.setProperty('--timer-color', color);
+                }
                 
                 if(w.timerLeft <= 0) { 
                     clearInterval(w.interval); 
@@ -657,31 +745,26 @@
                     playBtn.innerHTML = '<i class="fas fa-play"></i>';
                     playBtn.classList.remove('bg-orange-500');
                     showStatus("Tiden är ute!", "success");
-                    
                     const soundBtn = document.getElementById(`${id}-sound-btn`);
-                    if(soundBtn && soundBtn.getAttribute('data-sound') === 'on') {
-                        playAlarm();
-                    }
+                    if(soundBtn && soundBtn.getAttribute('data-sound') === 'on') { playAlarm(); }
                 }
             }, 1000);
         }
 
         function resetTimer(id) {
             const w = document.getElementById(id);
-            if(w.interval) {
-                clearInterval(w.interval);
-                w.interval = null;
-            }
+            if(w.interval) { clearInterval(w.interval); w.interval = null; }
             w.timerPaused = false;
             const playBtn = document.getElementById(`${id}-play-btn`);
-            if (playBtn) {
-                playBtn.innerHTML = '<i class="fas fa-play"></i>';
-                playBtn.classList.remove('bg-orange-500');
-            }
-            
+            if (playBtn) { playBtn.innerHTML = '<i class="fas fa-play"></i>'; playBtn.classList.remove('bg-orange-500'); }
             const val = document.getElementById(`${id}-input`).value;
-            document.getElementById(`${id}-txt`).innerText = `${val}:00`;
-            document.getElementById(`${id}-visual`).style.setProperty('--progress', '100%');
+            const txt = document.getElementById(`${id}-txt`);
+            const vis = document.getElementById(`${id}-visual`);
+            if(txt) txt.innerText = `${val}:00`;
+            if(vis) {
+                vis.style.setProperty('--progress', '100%');
+                vis.style.setProperty('--timer-color', '#48bb78');
+            }
         }
 
         function toggleTimerSound(id) {
@@ -703,31 +786,19 @@
         function playAlarm() {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             const now = ctx.currentTime;
-            const freq = 880; // Tonhöjd
-
-            // Funktion för att skapa ett enskilt pip
+            const freq = 880;
             const beep = (startTime) => {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.value = freq;
-                
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sine'; osc.frequency.value = freq;
                 gain.gain.setValueAtTime(0, startTime);
                 gain.gain.linearRampToValueAtTime(0.5, startTime + 0.02);
                 gain.gain.linearRampToValueAtTime(0, startTime + 0.1);
-                
-                osc.start(startTime);
-                osc.stop(startTime + 0.12);
+                osc.start(startTime); osc.stop(startTime + 0.12);
             };
-
-            // 3 grupper x 3 pip
             for (let group = 0; group < 3; group++) {
-                const groupStart = now + (group * 0.8); // 0.8s mellan gruppstarter
-                for (let i = 0; i < 3; i++) {
-                    beep(groupStart + (i * 0.15)); // 0.15s mellan pip i gruppen
-                }
+                const groupStart = now + (group * 0.8);
+                for (let i = 0; i < 3; i++) { beep(groupStart + (i * 0.15)); }
             }
         }
 
@@ -735,23 +806,16 @@
             const input = document.getElementById(`todo-input-${id}`);
             const val = text || input.value.trim();
             if (!val) return;
-            
             const list = document.getElementById(`todo-list-${id}`);
             const item = document.createElement('div');
             item.className = `todo-item ${isDone ? 'done' : ''}`;
-            item.innerHTML = `
-                <input type="checkbox" onchange="toggleTodo(this)" ${isDone ? 'checked' : ''}>
-                <span>${val}</span>
-                <i class="fas fa-times delete-btn" onclick="this.parentElement.remove()"></i>
-            `;
+            item.innerHTML = `<input type="checkbox" onchange="toggleTodo(this)" ${isDone ? 'checked' : ''}><span>${val}</span><i class="fas fa-times delete-btn" onclick="this.parentElement.remove()"></i>`;
             list.appendChild(item);
             if (!text) input.value = ''; 
             list.scrollTop = list.scrollHeight;
         }
 
-        function toggleTodo(cb) {
-            cb.parentElement.classList.toggle('done', cb.checked);
-        }
+        function toggleTodo(cb) { cb.parentElement.classList.toggle('done', cb.checked); }
 
         function addScheduleItem(id) {
             const subj = document.getElementById(`subj-${id}`).value;
@@ -811,28 +875,12 @@
                 const type = w.getAttribute('data-type');
                 const id = w.id;
                 const state = { id, type, top: w.style.top, left: w.style.left, width: w.style.width, height: w.style.height, data: {} };
-                
-                if (type === 'text') {
-                    state.data.html = document.getElementById(`tx-${id}`).innerHTML;
-                }
-                if (type === 'schedule') {
-                    state.data.items = Array.from(w.querySelectorAll('.schedule-item')).map(i => ({
-                        subj: i.querySelector('.subject').innerText, start: i.querySelector('.time-start').innerText,
-                        end: i.querySelector('.time-end').innerText, clr: i.style.backgroundColor
-                    }));
-                }
-                if (type === 'todo') {
-                    state.data.items = Array.from(w.querySelectorAll('.todo-item')).map(i => ({
-                        text: i.querySelector('span').innerText,
-                        done: i.querySelector('input[type="checkbox"]').checked
-                    }));
-                }
+                if (type === 'text') { state.data.html = document.getElementById(`tx-${id}`).innerHTML; }
+                if (type === 'schedule') { state.data.items = Array.from(w.querySelectorAll('.schedule-item')).map(i => ({ subj: i.querySelector('.subject').innerText, start: i.querySelector('.time-start').innerText, end: i.querySelector('.time-end').innerText, clr: i.style.backgroundColor })); }
+                if (type === 'todo') { state.data.items = Array.from(w.querySelectorAll('.todo-item')).map(i => ({ text: i.querySelector('span').innerText, done: i.querySelector('input[type="checkbox"]').checked })); }
                 if (type === 'symbol') { state.data.html = w.querySelector('.symbol-widget-content').innerHTML; }
                 if (type === 'clock') state.data.mode = w.getAttribute('data-mode') || 'digital';
-                if (type === 'timer') {
-                    const btn = document.getElementById(`${id}-sound-btn`);
-                    if (btn) state.data.sound = btn.getAttribute('data-sound');
-                }
+                if (type === 'timer') { const btn = document.getElementById(`${id}-sound-btn`); if (btn) state.data.sound = btn.getAttribute('data-sound'); }
                 state.backgroundColor = w.getAttribute('data-bg') || 'rgba(255,255,255,0.92)';
                 widgets.push(state);
             });
@@ -850,30 +898,12 @@
                     const w = createWidget(s.type, null, null, s.id);
                     w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
                     if (s.backgroundColor) setWidgetBackground(s.id, s.backgroundColor);
-                    
-                    if (s.type === 'text') {
-                        const tx = document.getElementById(`tx-${s.id}`);
-                        if(tx) tx.innerHTML = s.data.html || '';
-                    }
-                    if (s.type === 'schedule' && s.data.items) {
-                        const list = document.getElementById(`list-${s.id}`);
-                        s.data.items.forEach(item => {
-                            const div = document.createElement('div'); div.className = 'schedule-item'; div.style.backgroundColor = item.clr;
-                            div.innerHTML = `<span class="absolute top-1 right-1 cursor-pointer opacity-30 hover:opacity-100" onclick="this.parentElement.remove()"><i class="fas fa-times-circle"></i></span><span class="time-start">${item.start}</span><span class="subject">${item.subj}</span><span class="time-end">${item.end}</span>`;
-                            list.appendChild(div);
-                        });
-                    }
-                    if (s.type === 'todo' && s.data.items) {
-                        s.data.items.forEach(item => addTodoItem(s.id, item.text, item.done));
-                    }
-                    if (s.type === 'symbol') { 
-                        const content = w.querySelector('.symbol-widget-content');
-                        if(content) content.innerHTML = s.data.html; 
-                    }
+                    if (s.type === 'text') { const tx = document.getElementById(`tx-${s.id}`); if(tx) tx.innerHTML = s.data.html || ''; }
+                    if (s.type === 'schedule' && s.data.items) { const list = document.getElementById(`list-${s.id}`); s.data.items.forEach(item => { const div = document.createElement('div'); div.className = 'schedule-item'; div.style.backgroundColor = item.clr; div.innerHTML = `<span class="absolute top-1 right-1 cursor-pointer opacity-30 hover:opacity-100" onclick="this.parentElement.remove()"><i class="fas fa-times-circle"></i></span><span class="time-start">${item.start}</span><span class="subject">${item.subj}</span><span class="time-end">${item.end}</span>`; list.appendChild(div); }); }
+                    if (s.type === 'todo' && s.data.items) { s.data.items.forEach(item => addTodoItem(s.id, item.text, item.done)); }
+                    if (s.type === 'symbol') { const content = w.querySelector('.symbol-widget-content'); if(content) content.innerHTML = s.data.html; }
                     if (s.type === 'clock') setClockMode(s.id, s.data.mode || 'digital');
-                    if (s.type === 'timer' && s.data.sound === 'off') {
-                        toggleTimerSound(s.id);
-                    }
+                    if (s.type === 'timer' && s.data.sound === 'off') { toggleTimerSound(s.id); }
                 });
                 showStatus("Layout laddad!");
             };
