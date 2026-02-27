@@ -196,6 +196,8 @@
         .image-widget-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px; }
         .image-widget-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .spotify-container, .youtube-container { width: 100%; height: 100%; border-radius: 12px; overflow: hidden; background: #000; }
+        .video-widget-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 8px; }
+        .video-widget-container video { width: 100%; height: 100%; object-fit: contain; outline: none; }
 
         /* Bottenmeny Logik */
         #bottom-nav {
@@ -333,8 +335,9 @@
         <!-- Media -->
         <div class="nav-item hover:text-emerald-500" onclick="toggleSubmenu(event, 'media')">
             <i class="fas fa-play-circle"></i><span>Media</span>
-            <div id="menu-media" class="submenu">
+            <div id="menu-media" class="submenu !grid-cols-2">
                 <div class="submenu-item" onclick="createWidget('image')"><i class="fas fa-camera text-sky-500"></i><span>Bild</span></div>
+                <div class="submenu-item" onclick="createWidget('video')"><i class="fas fa-video text-purple-500"></i><span>Video</span></div>
                 <div class="submenu-item" onclick="createWidget('spotify')"><i class="fab fa-spotify text-green-500"></i><span>Spotify</span></div>
                 <div class="submenu-item" onclick="createWidget('youtube')"><i class="fab fa-youtube text-red-600"></i><span>YouTube</span></div>
             </div>
@@ -588,7 +591,7 @@
             
             let w = "220px", h = "240px", bodyHTML = '', toolbarExtra = '';
             if (type === 'clock' || type === 'timer') { w = "320px"; h = "300px"; }
-            if (type === 'text' || type === 'background' || type === 'image') { w = "400px"; h = "300px"; }
+            if (type === 'text' || type === 'background' || type === 'image' || type === 'video') { w = "400px"; h = "300px"; }
             if (type === 'spotify') { w = "320px"; h = "380px"; }
             if (type === 'youtube') { w = "400px"; h = "280px"; }
             widget.style.width = w; widget.style.height = h;
@@ -608,6 +611,10 @@
                 case 'youtube':
                     toolbarExtra = `<div class="toolbar-btn" onclick="showYouTubeInput('${id}')"><i class="fab fa-youtube text-red-600"></i></div>`;
                     bodyHTML = `<div class="widget-body p-0"><div id="yt-cont-${id}" class="youtube-container flex flex-col items-center justify-center bg-gray-900 border-2 border-red-500 border-dashed w-full h-full p-4"><div id="yt-input-grp-${id}" class="w-full flex flex-col gap-2"><input type="text" id="yt-link-${id}" placeholder="YouTube-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white border border-red-900 outline-none no-drag"><button onclick="handleYouTubeSubmit('${id}')" class="bg-red-600 text-white font-bold py-1.5 px-3 rounded text-xs hover:bg-red-500 no-drag">LADDA</button></div></div></div>`;
+                    break;
+                case 'video':
+                    toolbarExtra = `<div class="toolbar-btn" onclick="document.getElementById('vid-in-${id}').click()" title="Byt video"><i class="fas fa-sync-alt"></i></div>`;
+                    bodyHTML = `<div class="widget-body p-1"><div id="vid-cont-${id}" class="video-widget-container flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-200 w-full h-full"><button onclick="document.getElementById('vid-in-${id}').click()" class="text-purple-500 font-bold text-xs no-drag hover:underline">VÄLJ VIDEO</button></div><input type="file" id="vid-in-${id}" class="hidden no-drag" accept="video/*" onchange="handleWidgetVideo(this, '${id}')"></div>`;
                     break;
                 case 'image':
                     toolbarExtra = `<div class="toolbar-btn" onclick="document.getElementById('img-in-${id}').click()"><i class="fas fa-sync-alt"></i></div>`;
@@ -639,26 +646,29 @@
                             <input type="file" id="bg-in-${id}" class="hidden" accept="image/*" onchange="handleLocalImg(this, '${id}')">
                             
                             <div class="text-[0.65rem] font-bold text-gray-400 mb-2 uppercase tracking-wide text-center">Fast färg</div>
-                            <div class="grid grid-cols-4 gap-2 no-drag">
-                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #ffffff" onclick="setAppBackground('color', '#ffffff', '${id}')" title="Vit"></div>
-                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #ebf8ff" onclick="setAppBackground('color', '#ebf8ff', '${id}')" title="Ljusblå"></div>
-                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #f0fff4" onclick="setAppBackground('color', '#f0fff4', '${id}')" title="Ljusgrön"></div>
-                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #fffff0" onclick="setAppBackground('color', '#fffff0', '${id}')" title="Ljusgul"></div>
-                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #fff5f5" onclick="setAppBackground('color', '#fff5f5', '${id}')" title="Ljusrosa"></div>
-                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #faf5ff" onclick="setAppBackground('color', '#faf5ff', '${id}')" title="Ljuslila"></div>
-                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #2d3748" onclick="setAppBackground('color', '#2d3748', '${id}')" title="Mörkgrå"></div>
-                                <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer flex items-center justify-center bg-gray-100" onclick="setAppBackground('color', '#1a1a1a', '${id}')" title="Svart"><i class="fas fa-moon text-gray-400 text-xs"></i></div>
-                            </div>
-                        </div>`;
-                    break;
-                case 'text':
-                    bodyHTML = `
-                        <div class="widget-body h-full flex flex-col items-start justify-start">
-                            <div class="text-editor-toolbar no-drag w-full flex items-center gap-1 p-1">
-                                <div class="editor-btn" data-cmd="bold" onclick="execTextCommand('${id}', 'bold')" title="Fetstil"><i class="fas fa-bold"></i></div>
-                                <div class="editor-btn" data-cmd="italic" onclick="execTextCommand('${id}', 'italic')" title="Kursiv"><i class="fas fa-italic"></i></div>
-                                <div class="editor-btn" data-cmd="underline" onclick="execTextCommand('${id}', 'underline')" title="Understruken"><i class="fas fa-underline"></i></div>
-                                <div class="h-4 w-[1px] bg-gray-300 mx-1"></div>
+                    <div class="grid grid-cols-4 gap-2 no-drag">
+                        <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #ffffff" onclick="setAppBackground('color', '#ffffff', '${id}')" title="Vit"></div>
+                        <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #ebf8ff" onclick="setAppBackground('color', '#ebf8ff', '${id}')" title="Ljusblå"></div>
+                        <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #f0fff4" onclick="setAppBackground('color', '#f0fff4', '${id}')" title="Ljusgrön"></div>
+                        <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #fffff0" onclick="setAppBackground('color', '#fffff0', '${id}')" title="Ljusgul"></div>
+                        <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #fff5f5" onclick="setAppBackground('color', '#fff5f5', '${id}')" title="Ljusrosa"></div>
+                        <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #faf5ff" onclick="setAppBackground('color', '#faf5ff', '${id}')" title="Ljuslila"></div>
+                        <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer" style="background: #2d3748" onclick="setAppBackground('color', '#2d3748', '${id}')" title="Mörkgrå"></div>
+                        <div class="w-full aspect-square rounded-lg border border-gray-200 cursor-pointer flex items-center justify-center bg-gray-100" onclick="setAppBackground('color', '#1a1a1a', '${id}')" title="Svart"><i class="fas fa-moon text-gray-400 text-xs"></i></div>
+                    </div>
+                </div>`;
+            break;
+        case 'text':
+            toolbarExtra = `<div class="toolbar-btn" id="tb-btn-${id}" onclick="toggleTextToolbar('${id}')" title="Dölj/Visa verktyg"><i class="fas fa-chevron-up"></i></div>`;
+            bodyHTML = `
+                <div class="widget-body h-full flex flex-col items-start justify-start">
+                    <div id="tb-${id}" class="text-editor-toolbar no-drag w-full flex items-center gap-1 p-1">
+                        <div class="editor-btn" data-cmd="bold" onclick="execTextCommand('${id}', 'bold')" title="Fetstil"><i class="fas fa-bold"></i></div>
+                        <div class="editor-btn" data-cmd="italic" onclick="execTextCommand('${id}', 'italic')" title="Kursiv"><i class="fas fa-italic"></i></div>
+                        <div class="editor-btn" data-cmd="underline" onclick="execTextCommand('${id}', 'underline')" title="Understruken"><i class="fas fa-underline"></i></div>
+                        <div class="h-4 w-[1px] bg-gray-300 mx-1"></div>
+                        <div class="editor-btn" data-cmd="insertUnorderedList" onclick="execTextCommand('${id}', 'insertUnorderedList')" title="Punktlista"><i class="fas fa-list-ul"></i></div>
+                        <div class="h-4 w-[1px] bg-gray-300 mx-1"></div>
                                 <div class="editor-btn" data-cmd="insertUnorderedList" onclick="execTextCommand('${id}', 'insertUnorderedList')" title="Punktlista"><i class="fas fa-list-ul"></i></div>
                                 <div class="h-4 w-[1px] bg-gray-300 mx-1"></div>
                                 <select class="editor-select max-w-[100px]" onchange="execTextCommand('${id}', 'fontName', this.value)">
@@ -871,6 +881,17 @@
             }
         }
 
+        function handleWidgetVideo(input, id) {
+            const f = input.files[0];
+            if (f) {
+                const url = URL.createObjectURL(f);
+                const c = document.getElementById(`vid-cont-${id}`);
+                // Lägger till no-drag klass så att play/pause fungerar utan att flytta fönstret
+                c.innerHTML = `<video src="${url}" controls class="no-drag w-full h-full bg-black rounded"></video>`;
+                c.classList.remove('bg-gray-50', 'border-dashed', 'border-2');
+            }
+        }
+
         function showSpotifyInput(id) {
             document.getElementById(`spot-cont-${id}`).innerHTML = `
                 <div class="w-full flex flex-col gap-2 p-4">
@@ -917,13 +938,32 @@
             c.setAttribute('data-link', link);
         }
 
+        function toggleTextToolbar(id) {
+            const tb = document.getElementById(`tb-${id}`);
+            const btn = document.getElementById(`tb-btn-${id}`);
+            if (tb) {
+                if (tb.style.display === 'none') {
+                    tb.style.display = '';
+                    if (btn) btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+                } else {
+                    tb.style.display = 'none';
+                    if (btn) btn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                }
+            }
+        }
+
         function exportLayoutToFile() {
             const ws = [];
             const layer = document.getElementById('background-layer');
             document.querySelectorAll('.widget').forEach(w => {
                 const s = { id: w.id, type: w.getAttribute('data-type'), top: w.style.top, left: w.style.left, width: w.style.width, height: w.style.height, bg: w.getAttribute('data-bg'), data: {} };
-                if (s.type === 'text') s.data.html = document.getElementById(`tx-${w.id}`).innerHTML;
+                if (s.type === 'text') {
+                    s.data.html = document.getElementById(`tx-${w.id}`).innerHTML;
+                    const tb = document.getElementById(`tb-${w.id}`);
+                    s.data.toolbarHidden = tb && tb.style.display === 'none';
+                }
                 if (s.type === 'image') s.data.src = w.querySelector('img')?.src;
+                if (s.type === 'video') s.data.note = "Lokal videodata sparas inte i layouten på grund av filstorlek.";
                 if (s.type === 'spotify') s.data.link = document.getElementById(`spot-cont-${w.id}`).getAttribute('data-link');
                 if (s.type === 'youtube') s.data.link = document.getElementById(`yt-cont-${w.id}`).getAttribute('data-link');
                 if (s.type === 'todo') s.data.items = Array.from(w.querySelectorAll('.todo-item')).map(i=>({text:i.querySelector('span').innerText, done:i.querySelector('input').checked}));
@@ -945,9 +985,14 @@
                     const w = createWidget(s.type, null, null, s.id); w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
                     if (s.bg) setWidgetBackground(s.id, s.bg);
                     if (s.type === 'image' && s.data.src) { const c = document.getElementById(`img-cont-${s.id}`); c.innerHTML = `<img src="${s.data.src}">`; c.classList.remove('border-dashed'); }
+                    // Video-widgeten laddas in som en tom widget automatiskt eftersom filen inte sparas i json
                     if (s.type === 'spotify' && s.data.link) updateSpotifyEmbed(s.id, s.data.link);
                     if (s.type === 'youtube' && s.data.link) updateYouTubeEmbed(s.id, s.data.link);
-                    if (s.type === 'text') document.getElementById(`tx-${s.id}`).innerHTML = s.data.html;
+                    if (s.type === 'text') {
+                        const tx = document.getElementById(`tx-${s.id}`);
+                        if(tx) tx.innerHTML = s.data.html || '';
+                        if(s.data.toolbarHidden) toggleTextToolbar(s.id);
+                    }
                     if (s.type === 'todo') s.data.items.forEach(i => addTodoItem(s.id, i.text, i.done));
                     if (s.type === 'schedule' && s.data.items) s.data.items.forEach(i => addScheduleItem(s.id, i.subject, i.start, i.end, i.clr));
                     if (s.type === 'symbol') w.querySelector('.symbol-widget-content').innerHTML = s.data.html;
