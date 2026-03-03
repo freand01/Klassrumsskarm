@@ -164,6 +164,23 @@
         .visual-timer-circle::after { content: ''; position: absolute; top: 3.5%; left: 3.5%; right: 3.5%; bottom: 3.5%; background: white; border-radius: 50%; z-index: 10; }
         .timer-display { font-size: 22cqmin; font-weight: 800; color: #1a202c; position: relative; z-index: 20; }
 
+        /* Tidtagarur stilar */
+        .stopwatch-screen {
+            background: linear-gradient(to bottom, #1f2937, #111827);
+            border: 4px solid #374151;
+            box-shadow: inset 0 4px 15px rgba(0,0,0,0.6), 0 4px 10px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            font-variant-numeric: tabular-nums;
+            position: relative;
+            overflow: hidden;
+        }
+        .stopwatch-screen::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 40%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+            pointer-events: none;
+        }
+
         .symbol-widget-content { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .symbol-widget-content i { font-size: 45cqmin; color: #2d3748; }
         .symbol-widget-content p { font-weight: 800; font-size: 10cqmin; margin-top: 2cqmin; text-transform: uppercase; color: #4a5568; }
@@ -315,9 +332,10 @@
         <!-- Verktyg -->
         <div class="nav-item hover:text-blue-500" onclick="toggleSubmenu(event, 'tools')">
             <i class="fas fa-tools"></i><span>Verktyg</span>
-            <div id="menu-tools" class="submenu">
+            <div id="menu-tools" class="submenu !grid-cols-2">
                 <div class="submenu-item" onclick="createWidget('clock')"><i class="fas fa-clock text-blue-500"></i><span>Klocka</span></div>
                 <div class="submenu-item" onclick="createWidget('timer')"><i class="fas fa-hourglass-half text-orange-500"></i><span>Timer</span></div>
+                <div class="submenu-item" onclick="createWidget('stopwatch')"><i class="fas fa-stopwatch text-teal-500"></i><span>Tidtagarur</span></div>
                 <div class="submenu-item" onclick="createWidget('sound')"><i class="fas fa-microphone-alt text-red-500"></i><span>Ljudnivå</span></div>
             </div>
         </div>
@@ -591,6 +609,7 @@
             
             let w = "220px", h = "240px", bodyHTML = '', toolbarExtra = '';
             if (type === 'clock' || type === 'timer') { w = "320px"; h = "300px"; }
+            if (type === 'stopwatch') { w = "320px"; h = "240px"; }
             if (type === 'text' || type === 'background' || type === 'image' || type === 'video') { w = "400px"; h = "300px"; }
             if (type === 'spotify') { w = "320px"; h = "380px"; }
             if (type === 'youtube') { w = "400px"; h = "280px"; }
@@ -603,6 +622,20 @@
                     break;
                 case 'timer':
                     bodyHTML = `<div class="widget-body"><div class="visual-timer-circle" id="${id}-visual" style="--progress: 100%; --timer-color: #48bb78"><div class="timer-display" id="${id}-txt">10:00</div></div></div><div class="flex gap-2 mt-2 flex-shrink-0 justify-center no-drag"><input type="number" id="${id}-input" value="10" class="w-12 p-1 border rounded text-xs text-center"><button onclick="toggleTimer('${id}')" id="${id}-play-btn" class="bg-blue-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-blue-600"><i class="fas fa-play"></i></button><button onclick="resetTimer('${id}')" class="bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-xs hover:bg-gray-300"><i class="fas fa-redo"></i></button><button onclick="toggleTimerSound('${id}')" id="${id}-sound-btn" class="bg-blue-100 text-blue-600 px-3 py-1 rounded-lg text-xs hover:bg-blue-200" data-sound="on"><i class="fas fa-volume-up"></i></button></div>`;
+                    break;
+                case 'stopwatch':
+                    bodyHTML = `
+                        <div class="widget-body">
+                            <div class="stopwatch-screen w-[90%] h-24 flex flex-col items-center justify-center text-teal-400 shadow-inner">
+                                <div id="${id}-display" class="font-bold text-4xl tracking-widest flex items-baseline">
+                                    00:00<span class="text-2xl text-teal-600 ml-1">.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 mt-3 flex-shrink-0 justify-center no-drag">
+                            <button onclick="toggleStopwatch('${id}')" id="${id}-play-btn" class="bg-teal-500 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-teal-600 transition-colors shadow-sm"><i class="fas fa-play mr-1"></i> START</button>
+                            <button onclick="resetStopwatch('${id}')" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-300 transition-colors shadow-sm"><i class="fas fa-redo mr-1"></i> NOLLSTÄLL</button>
+                        </div>`;
                     break;
                 case 'spotify':
                     toolbarExtra = `<div class="toolbar-btn" onclick="showSpotifyInput('${id}')"><i class="fab fa-spotify text-green-500"></i></div>`;
@@ -808,6 +841,62 @@
             const vis = document.getElementById(`${id}-visual`); if(vis) { vis.style.setProperty('--progress', '100%'); vis.style.setProperty('--timer-color', '#48bb78'); }
         }
 
+        // --- Tidtagarur Logik ---
+        function formatStopwatchTime(ms) {
+            const totalSecs = Math.floor(ms / 1000);
+            const minutes = Math.floor(totalSecs / 60);
+            const seconds = totalSecs % 60;
+            const hundredths = Math.floor((ms % 1000) / 10);
+            const pad = (n) => n.toString().padStart(2, '0');
+            return `${pad(minutes)}:${pad(seconds)}<span class="text-2xl text-teal-600 ml-1">.${pad(hundredths)}</span>`;
+        }
+
+        function toggleStopwatch(id) {
+            const w = document.getElementById(id);
+            const playBtn = document.getElementById(`${id}-play-btn`);
+            if (w.isRunning) {
+                // Pausa
+                w.isRunning = false;
+                cancelAnimationFrame(w.rafId);
+                w.elapsedTime += Date.now() - w.startTime;
+                playBtn.innerHTML = '<i class="fas fa-play mr-1"></i> START';
+                playBtn.classList.replace('bg-orange-500', 'bg-teal-500');
+                playBtn.classList.replace('hover:bg-orange-600', 'hover:bg-teal-600');
+            } else {
+                // Starta
+                w.isRunning = true;
+                w.startTime = Date.now();
+                if (!w.elapsedTime) w.elapsedTime = 0;
+                playBtn.innerHTML = '<i class="fas fa-pause mr-1"></i> PAUS';
+                playBtn.classList.replace('bg-teal-500', 'bg-orange-500');
+                playBtn.classList.replace('hover:bg-teal-600', 'hover:bg-orange-600');
+
+                const display = document.getElementById(`${id}-display`);
+                const update = () => {
+                    if (!w.isRunning) return;
+                    const total = w.elapsedTime + (Date.now() - w.startTime);
+                    display.innerHTML = formatStopwatchTime(total);
+                    w.rafId = requestAnimationFrame(update);
+                };
+                w.rafId = requestAnimationFrame(update);
+            }
+        }
+
+        function resetStopwatch(id) {
+            const w = document.getElementById(id);
+            w.isRunning = false;
+            if (w.rafId) cancelAnimationFrame(w.rafId);
+            w.elapsedTime = 0;
+            const playBtn = document.getElementById(`${id}-play-btn`);
+            if (playBtn) {
+                playBtn.innerHTML = '<i class="fas fa-play mr-1"></i> START';
+                playBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                playBtn.classList.add('bg-teal-500', 'hover:bg-teal-600');
+            }
+            const display = document.getElementById(`${id}-display`);
+            if (display) display.innerHTML = formatStopwatchTime(0);
+        }
+
         function toggleTimerSound(id) {
             const btn = document.getElementById(`${id}-sound-btn`);
             const on = btn.getAttribute('data-sound') === 'on';
@@ -854,7 +943,9 @@
 
         function removeWidget(id) {
             const w = document.getElementById(id); if (!w) return;
-            if (w.interval) clearInterval(w.interval); if (w.micStream) w.micStream.getTracks().forEach(t => t.stop());
+            if (w.interval) clearInterval(w.interval); 
+            if (w.rafId) cancelAnimationFrame(w.rafId);
+            if (w.micStream) w.micStream.getTracks().forEach(t => t.stop());
             w.remove(); if (activeWidget === w) activeWidget = null;
         }
 
@@ -969,6 +1060,10 @@
                 if (s.type === 'todo') s.data.items = Array.from(w.querySelectorAll('.todo-item')).map(i=>({text:i.querySelector('span').innerText, done:i.querySelector('input').checked}));
                 if (s.type === 'schedule') s.data.items = Array.from(w.querySelectorAll('.schedule-item')).map(i=>({subject:i.querySelector('.subject').innerText, start:i.querySelector('.time-start').innerText, end:i.querySelector('.time-end').innerText, clr:i.style.backgroundColor}));
                 if (s.type === 'symbol') s.data.html = w.querySelector('.symbol-widget-content').innerHTML;
+                if (s.type === 'stopwatch') {
+                    // Spara nuvarande tid (men starta inte automatiskt efter laddning)
+                    s.data.elapsedTime = w.isRunning ? (w.elapsedTime + (Date.now() - w.startTime)) : (w.elapsedTime || 0);
+                }
                 ws.push(s);
             });
             const blob = new Blob([JSON.stringify({ bg: layer.style.backgroundImage, bgColor: layer.style.backgroundColor, widgets: ws }, null, 2)], { type: "application/json" });
@@ -996,6 +1091,10 @@
                     if (s.type === 'todo') s.data.items.forEach(i => addTodoItem(s.id, i.text, i.done));
                     if (s.type === 'schedule' && s.data.items) s.data.items.forEach(i => addScheduleItem(s.id, i.subject, i.start, i.end, i.clr));
                     if (s.type === 'symbol') w.querySelector('.symbol-widget-content').innerHTML = s.data.html;
+                    if (s.type === 'stopwatch' && s.data.elapsedTime) {
+                        w.elapsedTime = s.data.elapsedTime;
+                        document.getElementById(`${s.id}-display`).innerHTML = formatStopwatchTime(w.elapsedTime);
+                    }
                 }); showStatus("Laddat!");
             }; r.readAsText(input.files[0]);
         }
