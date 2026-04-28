@@ -6,6 +6,8 @@
     <title>Klassrumsskärm ✨</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Spotify Iframe API för att kunna kontrollera spelaren utifrån -->
+    <script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
     <style>
         body {
             margin: 0;
@@ -204,6 +206,58 @@
             pointer-events: none;
         }
 
+        /* Tärningar CSS */
+        .dice-scene {
+            perspective: 800px;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #166534;
+            border-radius: 12px;
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.5);
+        }
+        .dice-3d {
+            width: 48px;
+            height: 48px;
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: transform 1.2s cubic-bezier(0.1, 0.9, 0.2, 1), top 1.2s ease-out, left 1.2s ease-out;
+        }
+        .dice-face {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-shadow: inset 0 0 12px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-areas:
+                "a b c"
+                "d e f"
+                "g h i";
+            padding: 6px;
+            gap: 2px;
+        }
+        .dice-dot {
+            background: #1e293b;
+            border-radius: 50%;
+            width: 10px;
+            height: 10px;
+            margin: auto;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+        }
+        .dice-face-1 { transform: rotateY(  0deg) translateZ(24px); }
+        .dice-face-6 { transform: rotateY(180deg) translateZ(24px); }
+        .dice-face-3 { transform: rotateY( 90deg) translateZ(24px); }
+        .dice-face-4 { transform: rotateY(-90deg) translateZ(24px); }
+        .dice-face-5 { transform: rotateX( 90deg) translateZ(24px); }
+        .dice-face-2 { transform: rotateX(-90deg) translateZ(24px); }
+        .dot-center { grid-area: e; }
+        .dot-tl { grid-area: a; } .dot-tr { grid-area: c; }
+        .dot-ml { grid-area: d; } .dot-mr { grid-area: f; }
+        .dot-bl { grid-area: g; } .dot-br { grid-area: i; }
+
         /* Widget Rotation Handtag */
         .widget-rotate-handle {
             position: absolute;
@@ -247,6 +301,7 @@
         }
         .animate-attention { animation: arrow-bounce 0.8s infinite ease-in-out; }
 
+        /* Tajtare symboler och bildstöd */
         .widget[data-type="symbol"], .widget[data-type="image"], .widget[data-type="arasaac"] { padding: 6px; }
         .symbol-widget-content { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .symbol-widget-content i { font-size: 45cqmin; color: #2d3748; }
@@ -396,6 +451,7 @@
 
     <div id="bottom-nav-trigger"></div>
     <nav id="bottom-nav">
+        <!-- Verktyg -->
         <div class="nav-item hover:text-blue-500" onclick="toggleSubmenu(event, 'tools')">
             <i class="fas fa-tools"></i><span>Verktyg</span>
             <div id="menu-tools" class="submenu !grid-cols-3">
@@ -404,9 +460,11 @@
                 <div class="submenu-item" onclick="createWidget('stopwatch')"><i class="fas fa-stopwatch text-teal-500"></i><span>Tidtagarur</span></div>
                 <div class="submenu-item" onclick="createWidget('sound')"><i class="fas fa-microphone-alt text-red-500"></i><span>Ljudnivå</span></div>
                 <div class="submenu-item" onclick="createWidget('randomizer')"><i class="fas fa-random text-pink-500"></i><span>Slump</span></div>
+                <div class="submenu-item" onclick="createWidget('dice')"><i class="fas fa-dice text-purple-600"></i><span>Tärningar</span></div>
             </div>
         </div>
 
+        <!-- Skriva -->
         <div class="nav-item hover:text-amber-500" onclick="toggleSubmenu(event, 'write')">
             <i class="fas fa-pencil-alt"></i><span>Skriva</span>
             <div id="menu-write" class="submenu">
@@ -416,6 +474,7 @@
             </div>
         </div>
 
+        <!-- Media -->
         <div class="nav-item hover:text-emerald-500" onclick="toggleSubmenu(event, 'media')">
             <i class="fas fa-play-circle"></i><span>Media</span>
             <div id="menu-media" class="submenu !grid-cols-3">
@@ -427,6 +486,7 @@
             </div>
         </div>
 
+        <!-- Symboler -->
         <div class="nav-item hover:text-indigo-500" onclick="toggleSubmenu(event, 'symbols')">
             <i class="fas fa-comment-dots"></i><span>Symboler</span>
             <div id="menu-symbols" class="submenu !grid-cols-3">
@@ -441,6 +501,7 @@
 
         <div class="h-8 w-[1px] bg-gray-300 mx-2"></div>
 
+        <!-- System -->
         <div class="nav-item hover:text-slate-600" onclick="toggleSubmenu(event, 'system')">
             <i class="fas fa-cog"></i><span>System</span>
             <div id="menu-system" class="submenu !min-w-[150px] !grid-cols-2">
@@ -453,6 +514,7 @@
 
         <div class="h-8 w-[1px] bg-gray-300 mx-2"></div>
 
+        <!-- Om -->
         <div class="nav-item hover:text-pink-500" onclick="openAboutModal()">
             <i class="fas fa-info-circle"></i><span>Om</span>
         </div>
@@ -460,6 +522,7 @@
         <input type="file" id="import-file-input" class="hidden" accept=".json" onchange="importLayoutFromFile(this)">
     </nav>
 
+    <!-- Om-ruta (Modal) -->
     <div id="about-modal" class="fixed inset-0 bg-black bg-opacity-40 z-[3000] hidden items-center justify-center backdrop-blur-sm transition-opacity" onclick="if(event.target === this) closeAboutModal()">
         <div class="bg-white rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl relative text-center">
             <button onclick="closeAboutModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors">
@@ -477,6 +540,7 @@
         </div>
     </div>
 
+    <!-- ARASAAC Bildstöd (Modal) -->
     <div id="arasaac-modal" class="fixed inset-0 bg-black bg-opacity-40 z-[3000] hidden items-center justify-center backdrop-blur-sm transition-opacity" onclick="if(event.target === this) closeArasaacModal()">
         <div class="bg-white rounded-2xl p-6 max-w-2xl w-full mx-4 shadow-2xl relative flex flex-col max-h-[85vh]">
             <button onclick="closeArasaacModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors z-10">
@@ -502,6 +566,17 @@
         let widgetCount = 0;
         let activeWidget = null;
 
+        // Spotify API hantering
+        window.spotifyAPIReady = false;
+        window.spotifyQueue = [];
+        window.onSpotifyIframeApiReady = (IFrameAPI) => {
+            window.SpotifyIFrameAPI = IFrameAPI;
+            window.spotifyAPIReady = true;
+            window.spotifyQueue.forEach(item => initSpotifyController(item.id, item.uri));
+            window.spotifyQueue = [];
+        };
+
+        // Submeny logik
         function toggleSubmenu(e, menuId) {
             e.stopPropagation();
             const targetMenu = document.getElementById(`menu-${menuId}`);
@@ -624,8 +699,17 @@
                 if (e.target.closest('.no-drag') || e.target.closest('.toolbar-btn') || e.target.closest('.submenu') || e.target.closest('.resizer') || e.target.closest('.settings-popover') || e.target.closest('.widget-rotate-handle')) return;
                 setActiveWidget(el);
                 isDragging = true; startX = e.clientX - el.offsetLeft; startY = e.clientY - el.offsetTop;
+                
+                // Hindra att musen "fastnar" i iframes under drag
+                document.querySelectorAll('iframe').forEach(i => i.style.pointerEvents = 'none');
+
                 const onMove = (e) => { if (isDragging) { el.style.left = (e.clientX - startX) + 'px'; el.style.top = (e.clientY - startY) + 'px'; } };
-                const endMove = () => { isDragging = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', endMove); };
+                const endMove = () => { 
+                    isDragging = false; 
+                    document.querySelectorAll('iframe').forEach(i => i.style.pointerEvents = 'auto');
+                    document.removeEventListener('mousemove', onMove); 
+                    document.removeEventListener('mouseup', endMove); 
+                };
                 document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', endMove);
             });
 
@@ -661,7 +745,7 @@
                         if (currentResizer.classList.contains('resizer-n')) dH = -localDy;
                         if (currentResizer.classList.contains('resizer-se')) { dW = localDx; dH = localDy; }
                         if (currentResizer.classList.contains('resizer-nw')) { dW = -localDx; dH = -localDy; }
-                        if (currentResizer.classList.contains('resizer-ne')) { dW = localDx; dH = -localDy; }
+                        if (currentResizer.classList.contains('resizer-ne')) { dW = localDx; dH = localDy; }
                         if (currentResizer.classList.contains('resizer-sw')) { dW = -localDx; dH = localDy; }
                         
                         const finalNewW = Math.max(minW, startWidth + dW);
@@ -693,6 +777,7 @@
             });
         }
 
+        // Funktion för att dölja/fälla in widgeten
         function toggleWidgetCollapse(id) {
             const w = document.getElementById(id);
             if (!w) return;
@@ -718,6 +803,7 @@
             if (type === 'clock' || type === 'timer') { w = "320px"; h = "300px"; }
             if (type === 'stopwatch') { w = "320px"; h = "240px"; }
             if (type === 'randomizer') { w = "340px"; h = "400px"; }
+            if (type === 'dice') { w = "320px"; h = "260px"; }
             if (type === 'text' || type === 'background' || type === 'image' || type === 'video') { w = "400px"; h = "300px"; }
             if (type === 'pdf') { w = "500px"; h = "600px"; } 
             if (type === 'spotify') { w = "320px"; h = "380px"; }
@@ -754,9 +840,10 @@
                     bodyHTML = `
                         <div class="widget-body flex flex-col p-2 w-full h-full">
                             <div class="flex items-center justify-between w-full bg-gray-100 p-2 rounded-xl mb-2 no-drag shrink-0 shadow-inner border border-gray-200">
-                                <div class="flex items-center gap-2">
-                                    <label class="text-[10px] font-bold text-gray-500 tracking-wider">ELEVER i KLASSEN:</label>
-                                    <input type="number" id="rand-max-${id}" value="25" min="2" max="100" class="w-12 p-1 text-xs border rounded-md text-center font-bold text-pink-600 outline-none" onchange="renderRandomizer('${id}')">
+                                <div class="flex items-center gap-1">
+                                    <button id="sound-toggle-${id}" onclick="toggleWidgetSound('${id}')" data-sound="off" class="text-gray-400 hover:text-gray-600 transition-colors w-6 h-6 flex items-center justify-center rounded" title="Ljud av/på"><i class="fas fa-volume-mute"></i></button>
+                                    <label class="text-[10px] font-bold text-gray-500 tracking-wider">ELEVER:</label>
+                                    <input type="number" id="rand-max-${id}" value="25" min="2" max="100" class="w-10 p-1 text-xs border rounded-md text-center font-bold text-pink-600 outline-none" onchange="renderRandomizer('${id}')">
                                 </div>
                                 <div class="flex bg-white rounded-lg border p-0.5 shadow-sm">
                                     <button id="rand-mode-wheel-${id}" class="px-3 py-1 text-[10px] font-bold rounded-md bg-pink-100 text-pink-600 transition-colors" onclick="setRandomizerMode('${id}', 'wheel')"><i class="fas fa-dharmachakra mr-1"></i>HJUL</button>
@@ -768,8 +855,31 @@
                         </div>`;
                     setTimeout(() => renderRandomizer(id), 10);
                     break;
+                case 'dice':
+                    bodyHTML = `
+                        <div class="widget-body flex flex-col p-2 w-full h-full">
+                            <div id="dice-scene-${id}" class="dice-scene flex-grow relative overflow-hidden mb-2 no-drag cursor-pointer" onclick="rollDice('${id}')" title="Klicka på duken för att kasta">
+                            </div>
+                            <div class="flex gap-2 items-center justify-center shrink-0 no-drag">
+                                <button id="sound-toggle-${id}" onclick="toggleWidgetSound('${id}')" data-sound="off" class="text-gray-400 hover:text-gray-600 transition-colors w-6 h-6 flex items-center justify-center rounded" title="Ljud av/på"><i class="fas fa-volume-mute"></i></button>
+                                <label class="text-[10px] font-bold text-gray-500">ANTAL:</label>
+                                <select id="dice-count-${id}" class="w-12 p-1 text-xs border rounded outline-none font-bold" onchange="renderDice('${id}')">
+                                    <option value="1">1</option>
+                                    <option value="2" selected>2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                </select>
+                                <button onclick="rollDice('${id}')" class="bg-blue-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-600 shadow-sm transition-colors"><i class="fas fa-dice mr-1"></i>KASTA</button>
+                            </div>
+                        </div>`;
+                    setTimeout(() => renderDice(id), 10);
+                    break;
                 case 'spotify':
-                    toolbarExtra = `<div class="toolbar-btn" onclick="showSpotifyInput('${id}')" title="Byt länk"><i class="fab fa-spotify text-green-500"></i></div>`;
+                    toolbarExtra = `
+                        <div class="toolbar-btn" id="spot-play-btn-${id}" onclick="toggleSpotifyPlay('${id}')" title="Spela/Pausa"><i class="fas fa-play text-green-500"></i></div>
+                        <div class="toolbar-btn" onclick="showSpotifyInput('${id}')" title="Byt länk"><i class="fab fa-spotify text-green-500"></i></div>`;
                     bodyHTML = `<div class="widget-body p-0"><div id="spot-cont-${id}" class="spotify-container flex flex-col items-center justify-center bg-gray-900 border-2 border-green-500 border-dashed w-full h-full p-4"><div id="spot-input-grp-${id}" class="w-full flex flex-col gap-2"><input type="text" id="spot-link-${id}" placeholder="Klistra in Spotify-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white border border-green-900 outline-none no-drag"><button onclick="handleSpotifySubmit('${id}')" class="bg-green-500 text-black font-bold py-1.5 px-3 rounded text-xs hover:bg-green-400 no-drag">LADDA</button><p class="text-[10px] text-gray-400 text-center mt-1 italic">Logga in på Spotify i webbläsaren för hela låtar.</p></div></div></div>`;
                     break;
                 case 'youtube':
@@ -1014,7 +1124,6 @@
             const targetNumber = Math.floor(Math.random() * max) + 1;
             
             const sliceAngle = 360 / max;
-            // Mitten på tårtbiten vi vill ska hamna rakt upp (0 grader)
             const targetSliceCenter = (targetNumber - 1) * sliceAngle + sliceAngle / 2;
             
             const spins = 5 * 360;
@@ -1024,14 +1133,16 @@
             let addedRotation = targetRot - currentMod;
             if(addedRotation < spins) addedRotation += 360;
             
-            // Liten slumpmässig förskjutning i tårtbiten så den inte stannar EXAKT i mitten varje gång
             const offset = (Math.random() - 0.5) * (sliceAngle * 0.7);
             const finalRotation = currentRotation + addedRotation + offset;
             
             wheel.style.transform = `rotate(${finalRotation}deg)`;
             wheel.setAttribute('data-rotation', finalRotation);
             
-            try { playWheelSound(); } catch(e) {}
+            const sBtn = document.getElementById(`sound-toggle-${id}`);
+            if (sBtn && sBtn.getAttribute('data-sound') === 'on') {
+                try { playWheelSound(); } catch(e) {}
+            }
 
             setTimeout(() => {
                 wheel.isSpinning = false;
@@ -1042,13 +1153,11 @@
         function playWheelSound() {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
             let startTime = ctx.currentTime;
-            // Skapa ett tickande som saktar in
             for(let i=0; i<20; i++) {
                 let delay = Math.pow(i/19, 2) * 3.5; 
                 if(delay > 3.8) delay = 3.8;
                 playTick(ctx, startTime + delay);
             }
-            // Final pling
             setTimeout(() => {
                 const osc = ctx.createOscillator(), gain = ctx.createGain(); 
                 osc.type = 'triangle'; osc.frequency.value = 600; 
@@ -1074,22 +1183,15 @@
             const max = parseInt(document.getElementById(`rand-max-${id}`).value) || 30;
             const groupSize = parseInt(document.getElementById(`rand-gsize-${id}`).value) || 4;
             const res = document.getElementById(`rand-groups-res-${id}`);
-            
-            // Skapa array med elever och blanda (Fisher-Yates shuffle)
             let students = Array.from({length: max}, (_, i) => i + 1);
             for (let i = students.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [students[i], students[j]] = [students[j], students[i]];
             }
-            
-            // Fördela jämnt i grupper
             let groups = [];
             let numGroups = Math.ceil(max / groupSize);
             for(let i=0; i<numGroups; i++) groups.push([]);
-            students.forEach((s, i) => {
-                groups[i % numGroups].push(s);
-            });
-            
+            students.forEach((s, i) => { groups[i % numGroups].push(s); });
             let html = '';
             groups.forEach((g, i) => {
                 html += `<div class="bg-gray-50 border border-gray-200 rounded-xl p-2 shadow-sm flex flex-col items-center justify-center">
@@ -1100,42 +1202,125 @@
             res.innerHTML = html;
         }
 
-        // --- Slut på Slumpgenerator ---
+        // --- Tärningar Logik ---
+        function getDiceHTML() {
+            const dots = {
+                1: '<div class="dice-dot dot-center"></div>',
+                2: '<div class="dice-dot dot-tl"></div><div class="dice-dot dot-br"></div>',
+                3: '<div class="dice-dot dot-tl"></div><div class="dice-dot dot-center"></div><div class="dice-dot dot-br"></div>',
+                4: '<div class="dice-dot dot-tl"></div><div class="dice-dot dot-tr"></div><div class="dice-dot dot-bl"></div><div class="dice-dot dot-br"></div>',
+                5: '<div class="dice-dot dot-tl"></div><div class="dice-dot dot-tr"></div><div class="dice-dot dot-center"></div><div class="dice-dot dot-bl"></div><div class="dice-dot dot-br"></div>',
+                6: '<div class="dice-dot dot-tl"></div><div class="dice-dot dot-ml"></div><div class="dice-dot dot-bl"></div><div class="dice-dot dot-tr"></div><div class="dice-dot dot-mr"></div><div class="dice-dot dot-br"></div>'
+            };
+            return `
+                <div class="dice-face dice-face-1">${dots[1]}</div>
+                <div class="dice-face dice-face-2">${dots[2]}</div>
+                <div class="dice-face dice-face-3">${dots[3]}</div>
+                <div class="dice-face dice-face-4">${dots[4]}</div>
+                <div class="dice-face dice-face-5">${dots[5]}</div>
+                <div class="dice-face dice-face-6">${dots[6]}</div>
+            `;
+        }
+
+        function renderDice(id) {
+            const scene = document.getElementById(`dice-scene-${id}`);
+            if(!scene) return;
+            const count = parseInt(document.getElementById(`dice-count-${id}`).value) || 2;
+            scene.innerHTML = '';
+            for(let i=0; i<count; i++) {
+                const d = document.createElement('div');
+                d.className = 'dice-3d';
+                d.id = `die-${id}-${i}`;
+                d.innerHTML = getDiceHTML();
+                scene.appendChild(d);
+            }
+            setTimeout(() => rollDice(id, true), 50); 
+        }
+
+        function rollDice(id, silent = false) {
+            const count = parseInt(document.getElementById(`dice-count-${id}`).value) || 2;
+            const rotations = { 1: {x: 0, y: 0}, 2: {x: 90, y: 0}, 3: {x: 0, y: -90}, 4: {x: 0, y: 90}, 5: {x: -90, y: 0}, 6: {x: 0, y: 180} };
+            const sBtn = document.getElementById(`sound-toggle-${id}`);
+            if(!silent && sBtn && sBtn.getAttribute('data-sound') === 'on') { try { playDiceSound(); } catch(e) {} }
+            const rows = count > 3 ? 2 : 1;
+            const cols = Math.ceil(count / rows);
+            const cellW = 100 / cols;
+            const cellH = 100 / rows;
+            for(let i=0; i<count; i++) {
+                const d = document.getElementById(`die-${id}-${i}`);
+                if(!d) continue;
+                const result = Math.floor(Math.random() * 6) + 1;
+                const targetRot = rotations[result];
+                let currentX = parseFloat(d.getAttribute('data-rot-x')) || 0;
+                let currentY = parseFloat(d.getAttribute('data-rot-y')) || 0;
+                let spinX = (Math.floor(Math.random() * 3) + 2) * 360; 
+                let spinY = (Math.floor(Math.random() * 3) + 2) * 360;
+                if (Math.random() > 0.5) spinX *= -1;
+                if (Math.random() > 0.5) spinY *= -1;
+                const baseX = currentX - (currentX % 360);
+                const baseY = currentY - (currentY % 360);
+                const nextX = baseX + spinX + targetRot.x;
+                const nextY = baseY + spinY + targetRot.y;
+                d.setAttribute('data-rot-x', nextX);
+                d.setAttribute('data-rot-y', nextY);
+                d.style.transform = `rotateX(${nextX}deg) rotateY(${nextY}deg)`;
+                const row = Math.floor(i / cols), col = i % cols;
+                const l = (col * cellW) + 5 + Math.random() * (cellW - 30); 
+                const t = (row * cellH) + 5 + Math.random() * (cellH - 30);
+                d.style.left = `${Math.max(2, Math.min(80, l))}%`;
+                d.style.top = `${Math.max(2, Math.min(75, t))}%`;
+            }
+        }
+
+        function playDiceSound() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            let startTime = ctx.currentTime;
+            for(let i=0; i<6; i++) {
+                let delay = Math.random() * 0.5; 
+                const osc = ctx.createOscillator(), gain = ctx.createGain(); 
+                osc.type = 'triangle'; osc.frequency.value = 600 + Math.random() * 600; 
+                osc.connect(gain); gain.connect(ctx.destination);
+                gain.gain.setValueAtTime(0, startTime + delay);
+                gain.gain.linearRampToValueAtTime(0.5, startTime + delay + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + delay + 0.05);
+                osc.start(startTime + delay); osc.stop(startTime + delay + 0.05);
+            }
+        }
+
+        function toggleWidgetSound(id) {
+            const btn = document.getElementById(`sound-toggle-${id}`);
+            if (!btn) return;
+            const isOff = btn.getAttribute('data-sound') === 'off';
+            if (isOff) {
+                btn.setAttribute('data-sound', 'on');
+                btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                btn.classList.replace('text-gray-400', 'text-blue-500');
+            } else {
+                btn.setAttribute('data-sound', 'off');
+                btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                btn.classList.replace('text-blue-500', 'text-gray-400');
+            }
+        }
 
         // --- Widget Rotation Logik ---
         function makeWidgetRotatable(id) {
             const handle = document.getElementById(`rot-handle-${id}`);
             const widget = document.getElementById(id);
             if (!handle || !widget) return;
-
             let isRotating = false;
-
             handle.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                setActiveWidget(widget);
+                e.stopPropagation(); e.preventDefault(); setActiveWidget(widget);
                 isRotating = true;
-                
                 const rect = widget.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-
+                const centerX = rect.left + rect.width / 2, centerY = rect.top + rect.height / 2;
                 const onMouseMove = (e) => {
                     if (!isRotating) return;
-                    const dx = e.clientX - centerX;
-                    const dy = e.clientY - centerY;
+                    const dx = e.clientX - centerX, dy = e.clientY - centerY;
                     let angle = Math.atan2(dy, dx) * (180 / Math.PI);
                     setWidgetRotation(id, angle);
                 };
-
-                const onMouseUp = () => {
-                    isRotating = false;
-                    document.removeEventListener('mousemove', onMouseMove);
-                    document.removeEventListener('mouseup', onMouseUp);
-                };
-
-                document.addEventListener('mousemove', onMouseMove);
-                document.addEventListener('mouseup', onMouseUp);
+                const onMouseUp = () => { isRotating = false; document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp); };
+                document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
             });
         }
 
@@ -1144,20 +1329,14 @@
             if (w) {
                 w.setAttribute('data-rotation', angle);
                 w.style.transform = `rotate(${angle}deg)`;
-                
                 const tb = document.getElementById(`toolbar-${id}`);
-                if (tb) {
-                    tb.style.transform = `translateX(-50%) rotate(${-angle}deg)`;
-                }
+                if (tb) { tb.style.transform = `translateX(-50%) rotate(${-angle}deg)`; }
             }
         }
 
         function changeArrowColor(id, color) {
             const shape = document.getElementById(`arrow-shape-${id}`);
-            if(shape) {
-                shape.style.backgroundColor = color;
-                shape.setAttribute('data-color', color);
-            }
+            if(shape) { shape.style.backgroundColor = color; shape.setAttribute('data-color', color); }
         }
 
         function cycleArrowShape(id) {
@@ -1174,136 +1353,8 @@
             const wrapper = document.getElementById(`arrow-anim-wrapper-${id}`);
             if(!wrapper) return;
             const isAnim = wrapper.classList.contains('animate-attention');
-            if(isAnim) {
-                wrapper.classList.remove('animate-attention');
-                wrapper.setAttribute('data-anim', 'false');
-            } else {
-                wrapper.classList.add('animate-attention');
-                wrapper.setAttribute('data-anim', 'true');
-            }
-        }
-
-        function removeWidget(id) {
-            const w = document.getElementById(id); if (!w) return;
-            if (w.interval) clearInterval(w.interval); 
-            if (w.rafId) cancelAnimationFrame(w.rafId);
-            if (w.micStream) w.micStream.getTracks().forEach(t => t.stop());
-            w.remove(); if (activeWidget === w) activeWidget = null;
-        }
-
-        async function toggleMic(id) {
-            const w = document.getElementById(id), b = w.querySelector(`button`);
-            if(w.micStream) { w.micStream.getTracks().forEach(t => t.stop()); w.micStream = null; b.innerText = "MIKROFON"; document.getElementById(`sf-${id}`).style.width = '0%'; return; }
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); w.micStream = stream;
-                const ctx = new AudioContext(), ana = ctx.createAnalyser(); ctx.createMediaStreamSource(stream).connect(ana);
-                b.innerText = "AVSLUTA";
-                const update = () => {
-                    if(!w.micStream) return; const d = new Uint8Array(ana.frequencyBinCount); ana.getByteFrequencyData(d);
-                    document.getElementById(`sf-${id}`).style.width = Math.min((d.reduce((a,b)=>a+b)/d.length)*2.5, 100) + "%"; requestAnimationFrame(update);
-                }; update();
-            } catch(e) { showStatus("Mikrofonåtkomst krävs.", "error"); }
-        }
-
-        function handleWidgetImg(i, id) {
-            const f = i.files[0]; if (f) {
-                const r = new FileReader(); r.onload = (e) => {
-                    const c = document.getElementById(`img-cont-${id}`);
-                    c.innerHTML = `<img src="${e.target.result}">`; c.classList.remove('bg-gray-50', 'border-dashed', 'border-2');
-                }; r.readAsDataURL(f);
-            }
-        }
-
-        function handleWidgetVideo(input, id) {
-            const f = input.files[0];
-            if (f) {
-                const url = URL.createObjectURL(f);
-                const c = document.getElementById(`vid-cont-${id}`);
-                c.innerHTML = `<video src="${url}" controls class="no-drag w-full h-full bg-black rounded"></video>`;
-                c.classList.remove('bg-gray-50', 'border-dashed', 'border-2');
-            }
-        }
-
-        function handleWidgetPdf(input, id) {
-            const f = input.files[0];
-            if (f && f.type === 'application/pdf') {
-                const url = URL.createObjectURL(f);
-                const c = document.getElementById(`pdf-cont-${id}`);
-                c.innerHTML = `<iframe src="${url}#toolbar=0&view=FitH" class="no-drag w-full h-full rounded" frameborder="0"></iframe>`;
-                c.classList.remove('bg-gray-50', 'border-dashed', 'border-2');
-            } else if (f) {
-                showStatus("Vänligen välj en giltig PDF-fil.", "error");
-            }
-        }
-
-        function showSpotifyInput(id) {
-            document.getElementById(`spot-cont-${id}`).innerHTML = `
-                <div class="w-full flex flex-col gap-2 p-4">
-                    <input type="text" id="spot-link-${id}" placeholder="Spotify-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white no-drag">
-                    <button onclick="handleSpotifySubmit('${id}')" class="bg-green-500 py-1.5 rounded text-xs font-bold no-drag">LADDA</button>
-                </div>`;
-        }
-
-        function handleSpotifySubmit(id) {
-            const link = document.getElementById(`spot-link-${id}`).value;
-            if (link) updateSpotifyEmbed(id, link);
-        }
-
-        function updateSpotifyEmbed(id, link) {
-            let url = link;
-            if (link.includes("spotify.com")) {
-                const parts = link.split('?')[0].split('/');
-                url = `https://open.spotify.com/embed/${parts[parts.length-2]}/${parts[parts.length-1]}`;
-            }
-            const c = document.getElementById(`spot-cont-${id}`);
-            c.innerHTML = `<iframe class="no-drag" src="${url}" width="100%" height="100%" frameborder="0" allow="encrypted-media"></iframe>`;
-            c.setAttribute('data-link', link);
-        }
-
-        function showYouTubeInput(id) {
-            document.getElementById(`yt-cont-${id}`).innerHTML = `
-                <div class="w-full flex flex-col gap-2 p-4">
-                    <input type="text" id="yt-link-${id}" placeholder="YouTube-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white no-drag">
-                    <button onclick="handleYouTubeSubmit('${id}')" class="bg-red-600 text-white py-1.5 rounded text-xs font-bold no-drag">LADDA</button>
-                </div>`;
-        }
-
-        function handleYouTubeSubmit(id) {
-            const link = document.getElementById(`yt-link-${id}`).value;
-            if (link) updateYouTubeEmbed(id, link);
-        }
-
-        function updateYouTubeEmbed(id, link) {
-            let vid = link;
-            // Smartare tolkning av länken för att fånga upp alla format (inkl shorts)
-            const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\/shorts\/)([^#\&\?]*).*/;
-            const match = link.match(regExp);
-            
-            if (match && match[2].length === 11) {
-                vid = match[2];
-            } else {
-                if (link.includes("v=")) vid = link.split("v=")[1].split("&")[0];
-                else if (link.includes("youtu.be/")) vid = link.split("youtu.be/")[1].split("?")[0];
-            }
-            
-            const c = document.getElementById(`yt-cont-${id}`);
-            // Använder youtube-nocookie.com för att kringgå lokala filrestriktioner och öka integriteten
-            c.innerHTML = `<iframe class="no-drag" width="100%" height="100%" src="https://www.youtube-nocookie.com/embed/${vid}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
-            c.setAttribute('data-link', link);
-        }
-
-        function toggleTextToolbar(id) {
-            const tb = document.getElementById(`tb-${id}`);
-            const btn = document.getElementById(`tb-btn-${id}`);
-            if (tb) {
-                if (tb.style.display === 'none') {
-                    tb.style.display = '';
-                    if (btn) btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
-                } else {
-                    tb.style.display = 'none';
-                    if (btn) btn.innerHTML = '<i class="fas fa-chevron-down"></i>';
-                }
-            }
+            if(isAnim) { wrapper.classList.remove('animate-attention'); wrapper.setAttribute('data-anim', 'false'); }
+            else { wrapper.classList.add('animate-attention'); wrapper.setAttribute('data-anim', 'true'); }
         }
 
         function initClock(id) {
@@ -1368,139 +1419,117 @@
         }
 
         function formatStopwatchTime(ms) {
-            const totalSecs = Math.floor(ms / 1000);
-            const minutes = Math.floor(totalSecs / 60);
-            const seconds = totalSecs % 60;
-            const hundredths = Math.floor((ms % 1000) / 10);
-            const pad = (n) => n.toString().padStart(2, '0');
+            const totalSecs = Math.floor(ms / 1000), minutes = Math.floor(totalSecs / 60), seconds = totalSecs % 60, hundredths = Math.floor((ms % 1000) / 10), pad = (n) => n.toString().padStart(2, '0');
             return `${pad(minutes)}:${pad(seconds)}<span class="text-2xl text-teal-600 ml-1">.${pad(hundredths)}</span>`;
         }
 
         function toggleStopwatch(id) {
-            const w = document.getElementById(id);
-            const playBtn = document.getElementById(`${id}-play-btn`);
+            const w = document.getElementById(id), playBtn = document.getElementById(`${id}-play-btn`);
             if (w.isRunning) {
-                w.isRunning = false;
-                cancelAnimationFrame(w.rafId);
-                w.elapsedTime += Date.now() - w.startTime;
-                playBtn.innerHTML = '<i class="fas fa-play mr-1"></i> START';
-                playBtn.classList.replace('bg-orange-500', 'bg-teal-500');
-                playBtn.classList.replace('hover:bg-orange-600', 'hover:bg-teal-600');
+                w.isRunning = false; cancelAnimationFrame(w.rafId); w.elapsedTime += Date.now() - w.startTime;
+                playBtn.innerHTML = '<i class="fas fa-play mr-1"></i> START'; playBtn.classList.replace('bg-orange-500', 'bg-teal-500');
             } else {
-                w.isRunning = true;
-                w.startTime = Date.now();
-                if (!w.elapsedTime) w.elapsedTime = 0;
-                playBtn.innerHTML = '<i class="fas fa-pause mr-1"></i> PAUS';
-                playBtn.classList.replace('bg-teal-500', 'bg-orange-500');
-                playBtn.classList.replace('hover:bg-teal-600', 'hover:bg-orange-600');
-                const display = document.getElementById(`${id}-display`);
-                const update = () => {
-                    if (!w.isRunning) return;
-                    const total = w.elapsedTime + (Date.now() - w.startTime);
-                    display.innerHTML = formatStopwatchTime(total);
-                    w.rafId = requestAnimationFrame(update);
-                };
+                w.isRunning = true; w.startTime = Date.now(); if (!w.elapsedTime) w.elapsedTime = 0;
+                playBtn.innerHTML = '<i class="fas fa-pause mr-1"></i> PAUS'; playBtn.classList.replace('bg-teal-500', 'bg-orange-500');
+                const display = document.getElementById(`${id}-display`), update = () => { if (!w.isRunning) return; const total = w.elapsedTime + (Date.now() - w.startTime); display.innerHTML = formatStopwatchTime(total); w.rafId = requestAnimationFrame(update); };
                 w.rafId = requestAnimationFrame(update);
             }
         }
 
         function resetStopwatch(id) {
-            const w = document.getElementById(id);
-            w.isRunning = false;
-            if (w.rafId) cancelAnimationFrame(w.rafId);
-            w.elapsedTime = 0;
-            const playBtn = document.getElementById(`${id}-play-btn`);
-            if (playBtn) {
-                playBtn.innerHTML = '<i class="fas fa-play mr-1"></i> START';
-                playBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
-                playBtn.classList.add('bg-teal-500', 'hover:bg-teal-600');
-            }
-            const display = document.getElementById(`${id}-display`);
-            if (display) display.innerHTML = formatStopwatchTime(0);
-        }
-
-        function toggleTimerSound(id) {
-            const btn = document.getElementById(`${id}-sound-btn`);
-            const on = btn.getAttribute('data-sound') === 'on';
-            btn.setAttribute('data-sound', on ? 'off' : 'on');
-            btn.innerHTML = on ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-            btn.classList.toggle('bg-blue-100', !on); btn.classList.toggle('bg-gray-200', on);
+            const w = document.getElementById(id); w.isRunning = false; if (w.rafId) cancelAnimationFrame(w.rafId); w.elapsedTime = 0;
+            const playBtn = document.getElementById(`${id}-play-btn`); if (playBtn) { playBtn.innerHTML = '<i class="fas fa-play mr-1"></i> START'; playBtn.classList.replace('bg-orange-500', 'bg-teal-500'); }
+            const display = document.getElementById(`${id}-display`); if (display) display.innerHTML = formatStopwatchTime(0);
         }
 
         function playAlarm() {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const beep = (s) => {
-                const osc = ctx.createOscillator(), gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination);
-                osc.type = 'sine'; osc.frequency.value = 880; gain.gain.setValueAtTime(0, s); gain.gain.linearRampToValueAtTime(0.5, s + 0.02); gain.gain.linearRampToValueAtTime(0, s + 0.1); osc.start(s); osc.stop(s + 0.12);
-            };
+            const beep = (s) => { const osc = ctx.createOscillator(), gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.type = 'sine'; osc.frequency.value = 880; gain.gain.setValueAtTime(0, s); gain.gain.linearRampToValueAtTime(0.5, s + 0.02); gain.gain.linearRampToValueAtTime(0, s + 0.1); osc.start(s); osc.stop(s + 0.12); };
             for (let i = 0; i < 3; i++) beep(ctx.currentTime + (i * 0.15));
         }
 
-        function addTodoItem(id, text = null, isDone = false) {
-            const input = document.getElementById(`todo-input-${id}`); const val = text || input.value.trim(); if (!val) return;
-            const list = document.getElementById(`todo-list-${id}`), item = document.createElement('div');
-            item.className = `todo-item ${isDone ? 'done' : ''}`;
-            item.innerHTML = `<input type="checkbox" onchange="toggleTodo(this)" ${isDone ? 'checked' : ''}><span>${val}</span><i class="fas fa-times delete-btn" onclick="this.parentElement.remove()"></i>`;
-            list.appendChild(item); if (!text) input.value = '';
+        function removeWidget(id) {
+            const w = document.getElementById(id); if (!w) return;
+            if (w.interval) clearInterval(w.interval); 
+            if (w.rafId) cancelAnimationFrame(w.rafId);
+            if (w.micStream) w.micStream.getTracks().forEach(t => t.stop());
+            if (w.spotifyController) { try { w.spotifyController.destroy(); } catch(e) {} }
+            w.remove(); if (activeWidget === w) activeWidget = null;
         }
 
+        async function toggleMic(id) {
+            const w = document.getElementById(id), b = w.querySelector(`button`);
+            if(w.micStream) { w.micStream.getTracks().forEach(t => t.stop()); w.micStream = null; b.innerText = "MIKROFON"; document.getElementById(`sf-${id}`).style.width = '0%'; return; }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); w.micStream = stream;
+                const ctx = new AudioContext(), ana = ctx.createAnalyser(); ctx.createMediaStreamSource(stream).connect(ana);
+                b.innerText = "AVSLUTA";
+                const update = () => { if(!w.micStream) return; const d = new Uint8Array(ana.frequencyBinCount); ana.getByteFrequencyData(d); document.getElementById(`sf-${id}`).style.width = Math.min((d.reduce((a,b)=>a+b)/d.length)*2.5, 100) + "%"; requestAnimationFrame(update); };
+                update();
+            } catch(e) { showStatus("Mikrofonåtkomst krävs.", "error"); }
+        }
+
+        function handleWidgetImg(i, id) { const f = i.files[0]; if (f) { const r = new FileReader(); r.onload = (e) => { const c = document.getElementById(`img-cont-${id}`); c.innerHTML = `<img src="${e.target.result}">`; c.classList.remove('bg-gray-50', 'border-dashed', 'border-2'); }; r.readAsDataURL(f); } }
+        function handleWidgetVideo(input, id) { const f = input.files[0]; if (f) { const url = URL.createObjectURL(f); const c = document.getElementById(`vid-cont-${id}`); c.innerHTML = `<video src="${url}" controls class="no-drag w-full h-full bg-black rounded"></video>`; c.classList.remove('bg-gray-50', 'border-dashed', 'border-2'); } }
+        function handleWidgetPdf(input, id) { const f = input.files[0]; if (f && f.type === 'application/pdf') { const url = URL.createObjectURL(f); const c = document.getElementById(`pdf-cont-${id}`); c.innerHTML = `<iframe src="${url}#toolbar=0&view=FitH" class="no-drag w-full h-full rounded" frameborder="0"></iframe>`; c.classList.remove('bg-gray-50', 'border-dashed', 'border-2'); } else if (f) { showStatus("Vänligen välj en giltig PDF-fil.", "error"); } }
+
+        function showSpotifyInput(id) { document.getElementById(`spot-cont-${id}`).innerHTML = `<div class="w-full flex flex-col gap-2 p-4"><input type="text" id="spot-link-${id}" placeholder="Spotify-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white no-drag"><button onclick="handleSpotifySubmit('${id}')" class="bg-green-500 py-1.5 rounded text-xs font-bold no-drag">LADDA</button></div>`; }
+        function handleSpotifySubmit(id) { const link = document.getElementById(`spot-link-${id}`).value; if (link) updateSpotifyEmbed(id, link); }
+        function updateSpotifyEmbed(id, link) {
+            let uri = link;
+            if (link.includes("spotify.com")) { const parts = link.split('?')[0].split('/'); const type = parts[parts.length-2]; const spotId = parts[parts.length-1]; uri = `spotify:${type}:${spotId}`; }
+            const w = document.getElementById(id); if (w && w.spotifyController) { try { w.spotifyController.destroy(); } catch(e) {} w.spotifyController = null; }
+            const c = document.getElementById(`spot-cont-${id}`); c.innerHTML = `<div id="spot-iframe-${id}" class="w-full h-full no-drag"></div>`; c.setAttribute('data-link', link);
+            if (window.spotifyAPIReady) initSpotifyController(id, uri); else window.spotifyQueue.push({id, uri});
+        }
+        function initSpotifyController(id, uri) {
+            const el = document.getElementById(`spot-iframe-${id}`); if(!el) return;
+            const options = { width: '100%', height: '100%', uri: uri };
+            const callback = (EmbedController) => {
+                const w = document.getElementById(id); if(w) w.spotifyController = EmbedController;
+                EmbedController.addListener('playback_update', e => { const btn = document.getElementById(`spot-play-btn-${id}`); if(btn) btn.innerHTML = e.data.isPaused ? '<i class="fas fa-play text-green-500"></i>' : '<i class="fas fa-pause text-green-500"></i>'; });
+            };
+            if (window.SpotifyIFrameAPI) window.SpotifyIFrameAPI.createController(el, options, callback);
+        }
+        function toggleSpotifyPlay(id) { const w = document.getElementById(id); if(w && w.spotifyController) w.spotifyController.togglePlay(); }
+
+        function showYouTubeInput(id) { document.getElementById(`yt-cont-${id}`).innerHTML = `<div class="w-full flex flex-col gap-2 p-4"><input type="text" id="yt-link-${id}" placeholder="YouTube-länk..." class="w-full p-2 text-xs rounded bg-gray-800 text-white no-drag"><button onclick="handleYouTubeSubmit('${id}')" class="bg-red-600 text-white py-1.5 rounded text-xs font-bold no-drag">LADDA</button></div>`; }
+        function handleYouTubeSubmit(id) { const link = document.getElementById(`yt-link-${id}`).value; if (link) updateYouTubeEmbed(id, link); }
+        function updateYouTubeEmbed(id, link) {
+            let vid = link; const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\/shorts\/)([^#\&\?]*).*/; const match = link.match(regExp);
+            if (match && match[2].length === 11) vid = match[2]; else { if (link.includes("v=")) vid = link.split("v=")[1].split("&")[0]; else if (link.includes("youtu.be/")) vid = link.split("youtu.be/")[1].split("?")[0]; }
+            const c = document.getElementById(`yt-cont-${id}`); c.innerHTML = `<iframe class="no-drag" width="100%" height="100%" src="https://www.youtube-nocookie.com/embed/${vid}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`; c.setAttribute('data-link', link);
+        }
+
+        function toggleTextToolbar(id) { const tb = document.getElementById(`tb-${id}`), btn = document.getElementById(`tb-btn-${id}`); if (tb) { if (tb.style.display === 'none') { tb.style.display = ''; if (btn) btn.innerHTML = '<i class="fas fa-chevron-up"></i>'; } else { tb.style.display = 'none'; if (btn) btn.innerHTML = '<i class="fas fa-chevron-down"></i>'; } } }
+        function addTodoItem(id, text = null, isDone = false) { const input = document.getElementById(`todo-input-${id}`), val = text || input.value.trim(); if (!val) return; const list = document.getElementById(`todo-list-${id}`), item = document.createElement('div'); item.className = `todo-item ${isDone ? 'done' : ''}`; item.innerHTML = `<input type="checkbox" onchange="toggleTodo(this)" ${isDone ? 'checked' : ''}><span>${val}</span><i class="fas fa-times delete-btn" onclick="this.parentElement.remove()"></i>`; list.appendChild(item); if (!text) input.value = ''; }
         function toggleTodo(cb) { cb.parentElement.classList.toggle('done', cb.checked); }
-
-        function addScheduleItem(id, subject = null, start = null, end = null, color = null) {
-            const subjVal = subject || document.getElementById(`subj-${id}`).value;
-            const startVal = start || document.getElementById(`start-${id}`).value;
-            const endVal = end || document.getElementById(`end-${id}`).value;
-            const clrVal = color || document.getElementById(`clr-${id}`).value;
-            if (!subjVal) return;
-            const list = document.getElementById(`list-${id}`);
-            const item = document.createElement('div');
-            item.className = 'schedule-item';
-            item.style.backgroundColor = clrVal;
-            item.innerHTML = `<span class="absolute top-1 right-1 cursor-pointer opacity-30 hover:opacity-100" onclick="this.parentElement.remove()"><i class="fas fa-times-circle"></i></span><span class="time-start">${startVal}</span><span class="subject">${subjVal}</span><span class="time-end">${endVal}</span>`;
-            list.appendChild(item);
-            if (!subject) document.getElementById(`subj-${id}`).value = '';
-        }
-
+        function addScheduleItem(id, subject = null, start = null, end = null, color = null) { const subjVal = subject || document.getElementById(`subj-${id}`).value, startVal = start || document.getElementById(`start-${id}`).value, endVal = end || document.getElementById(`end-${id}`).value, clrVal = color || document.getElementById(`clr-${id}`).value; if (!subjVal) return; const list = document.getElementById(`list-${id}`), item = document.createElement('div'); item.className = 'schedule-item'; item.style.backgroundColor = clrVal; item.innerHTML = `<span class="absolute top-1 right-1 cursor-pointer opacity-30 hover:opacity-100" onclick="this.parentElement.remove()"><i class="fas fa-times-circle"></i></span><span class="time-start">${startVal}</span><span class="subject">${subjVal}</span><span class="time-end">${endVal}</span>`; list.appendChild(item); if (!subject) document.getElementById(`subj-${id}`).value = ''; }
         function createSymbolWidget(t, i, l) { createWidget('symbol', `<i class="fas ${i}"></i><p>${l}</p>`, l.toUpperCase()); }
 
+        function openAboutModal() { const modal = document.getElementById('about-modal'); modal.classList.remove('hidden'); modal.classList.add('flex'); document.querySelectorAll('.submenu').forEach(m => m.classList.remove('active')); }
+        function closeAboutModal() { const modal = document.getElementById('about-modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        function openArasaacModal() { const modal = document.getElementById('arasaac-modal'); modal.classList.remove('hidden'); modal.classList.add('flex'); document.querySelectorAll('.submenu').forEach(m => m.classList.remove('active')); setTimeout(() => document.getElementById('arasaac-search-input').focus(), 100); }
+        function closeArasaacModal() { const modal = document.getElementById('arasaac-modal'); modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        async function searchArasaac() { const input = document.getElementById('arasaac-search-input').value.trim(), resultsDiv = document.getElementById('arasaac-results'); if(!input) return; resultsDiv.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10"><i class="fas fa-spinner fa-spin text-3xl mb-3"></i><br>Söker bildstöd...</div>'; try { const res = await fetch(`https://api.arasaac.org/api/pictograms/sv/search/${encodeURIComponent(input)}`); if(!res.ok) throw new Error('Nätverksfel'); const data = await res.json(); if(data.length === 0) { resultsDiv.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">Inga symboler hittades.</div>'; return; } resultsDiv.innerHTML = ''; data.slice(0, 20).forEach(pic => { const imgUrl = `https://static.arasaac.org/pictograms/${pic._id}/${pic._id}_300.png`; const imgEl = document.createElement('img'); imgEl.src = imgUrl; imgEl.className = 'w-full h-auto cursor-pointer hover:scale-105 transition-transform border rounded-xl p-2 bg-white shadow-sm'; imgEl.onclick = () => addImageWidgetFromUrl(imgUrl); resultsDiv.appendChild(imgEl); }); } catch (error) { resultsDiv.innerHTML = '<div class="col-span-full text-center text-red-500 py-10">Kunde inte hämta bilder.</div>'; } }
+        function addImageWidgetFromUrl(url) { const widget = createWidget('arasaac'); const c = document.getElementById(`img-cont-${widget.id}`); c.innerHTML = `<img src="${url}">`; closeArasaacModal(); }
+
         function exportLayoutToFile() {
-            const ws = [];
-            const layer = document.getElementById('background-layer');
+            const ws = []; const layer = document.getElementById('background-layer');
             document.querySelectorAll('.widget').forEach(w => {
                 const s = { id: w.id, type: w.getAttribute('data-type'), top: w.style.top, left: w.style.left, width: w.style.width, height: w.style.height, bg: w.getAttribute('data-bg'), data: {} };
-                
-                s.data.rotation = w.getAttribute('data-rotation') || '0';
-                s.data.collapsed = w.classList.contains('collapsed');
-                
-                if (s.type === 'text') {
-                    s.data.html = document.getElementById(`tx-${w.id}`).innerHTML;
-                    const tb = document.getElementById(`tb-${w.id}`);
-                    s.data.toolbarHidden = tb && tb.style.display === 'none';
-                }
+                s.data.rotation = w.getAttribute('data-rotation') || '0'; s.data.collapsed = w.classList.contains('collapsed');
+                if (s.type === 'text') { s.data.html = document.getElementById(`tx-${w.id}`).innerHTML; const tb = document.getElementById(`tb-${w.id}`); s.data.toolbarHidden = tb && tb.style.display === 'none'; }
                 if (s.type === 'image' || s.type === 'arasaac') s.data.src = w.querySelector('img')?.src;
-                if (s.type === 'video') s.data.note = "Lokal videodata sparas inte i layouten på grund av filstorlek.";
-                if (s.type === 'pdf') s.data.note = "Lokal PDF-data sparas inte i layouten på grund av filstorlek.";
                 if (s.type === 'spotify') s.data.link = document.getElementById(`spot-cont-${w.id}`).getAttribute('data-link');
                 if (s.type === 'youtube') s.data.link = document.getElementById(`yt-cont-${w.id}`).getAttribute('data-link');
                 if (s.type === 'todo') s.data.items = Array.from(w.querySelectorAll('.todo-item')).map(i=>({text:i.querySelector('span').innerText, done:i.querySelector('input').checked}));
                 if (s.type === 'schedule') s.data.items = Array.from(w.querySelectorAll('.schedule-item')).map(i=>({subject:i.querySelector('.subject').innerText, start:i.querySelector('.time-start').innerText, end:i.querySelector('.time-end').innerText, clr:i.style.backgroundColor}));
                 if (s.type === 'symbol') s.data.html = w.querySelector('.symbol-widget-content').innerHTML;
-                if (s.type === 'arrow') {
-                    const wAW = document.getElementById(`arrow-anim-wrapper-${w.id}`);
-                    const wSH = document.getElementById(`arrow-shape-${w.id}`);
-                    s.data.anim = wAW.getAttribute('data-anim');
-                    s.data.shape = wSH.getAttribute('data-shape');
-                    s.data.color = wSH.getAttribute('data-color');
-                }
-                if (s.type === 'stopwatch') {
-                    s.data.elapsedTime = w.isRunning ? (w.elapsedTime + (Date.now() - w.startTime)) : (w.elapsedTime || 0);
-                }
-                if (s.type === 'randomizer') {
-                    s.data.mode = w.getAttribute('data-rand-mode');
-                    s.data.max = document.getElementById(`rand-max-${w.id}`).value;
-                    const gsize = document.getElementById(`rand-gsize-${w.id}`);
-                    if(gsize) s.data.gsize = gsize.value;
-                }
+                if (s.type === 'arrow') { const wAW = document.getElementById(`arrow-anim-wrapper-${w.id}`), wSH = document.getElementById(`arrow-shape-${w.id}`); s.data.anim = wAW.getAttribute('data-anim'); s.data.shape = wSH.getAttribute('data-shape'); s.data.color = wSH.getAttribute('data-color'); }
+                if (s.type === 'stopwatch') s.data.elapsedTime = w.isRunning ? (w.elapsedTime + (Date.now() - w.startTime)) : (w.elapsedTime || 0);
+                if (s.type === 'randomizer') { s.data.mode = w.getAttribute('data-rand-mode'); s.data.max = document.getElementById(`rand-max-${w.id}`).value; const gsize = document.getElementById(`rand-gsize-${w.id}`); if(gsize) s.data.gsize = gsize.value; const sBtn = document.getElementById(`sound-toggle-${w.id}`); if (sBtn) s.data.sound = sBtn.getAttribute('data-sound'); }
+                if (s.type === 'dice') { const c = document.getElementById(`dice-count-${w.id}`); if(c) s.data.count = c.value; const sBtn = document.getElementById(`sound-toggle-${w.id}`); if (sBtn) s.data.sound = sBtn.getAttribute('data-sound'); }
                 ws.push(s);
             });
             const blob = new Blob([JSON.stringify({ bg: layer.style.backgroundImage, bgColor: layer.style.backgroundColor, widgets: ws }, null, 2)], { type: "application/json" });
@@ -1510,58 +1539,22 @@
         function importLayoutFromFile(input) {
             const r = new FileReader(); r.onload = (e) => {
                 const d = JSON.parse(e.target.result); document.querySelectorAll('.widget').forEach(w => removeWidget(w.id));
-                const layer = document.getElementById('background-layer');
-                if (d.bg) layer.style.backgroundImage = d.bg;
-                if (d.bgColor) layer.style.backgroundColor = d.bgColor;
+                const layer = document.getElementById('background-layer'); if (d.bg) layer.style.backgroundImage = d.bg; if (d.bgColor) layer.style.backgroundColor = d.bgColor;
                 d.widgets.forEach(s => {
                     const w = createWidget(s.type, null, null, s.id); w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
-                    
-                    if (s.data.rotation && s.data.rotation !== '0') {
-                        setWidgetRotation(s.id, parseFloat(s.data.rotation));
-                    }
-
+                    if (s.data.rotation && s.data.rotation !== '0') setWidgetRotation(s.id, parseFloat(s.data.rotation));
                     if (s.bg) setWidgetBackground(s.id, s.bg);
-                    if ((s.type === 'image' || s.type === 'arasaac') && s.data.src) { 
-                        const c = document.getElementById(`img-cont-${s.id}`); 
-                        c.innerHTML = `<img src="${s.data.src}">`; 
-                        if (s.type === 'image') c.classList.remove('bg-gray-50', 'border-dashed', 'border-2'); 
-                    }
+                    if ((s.type === 'image' || s.type === 'arasaac') && s.data.src) { const c = document.getElementById(`img-cont-${s.id}`); c.innerHTML = `<img src="${s.data.src}">`; if (s.type === 'image') c.classList.remove('bg-gray-50', 'border-dashed', 'border-2'); }
                     if (s.type === 'spotify' && s.data.link) updateSpotifyEmbed(s.id, s.data.link);
                     if (s.type === 'youtube' && s.data.link) updateYouTubeEmbed(s.id, s.data.link);
-                    if (s.type === 'text') {
-                        const tx = document.getElementById(`tx-${s.id}`);
-                        if(tx) tx.innerHTML = s.data.html || '';
-                        if(s.data.toolbarHidden) toggleTextToolbar(s.id);
-                    }
-                    if (s.type === 'arrow') {
-                        if (s.data.color) changeArrowColor(s.id, s.data.color);
-                        if (s.data.shape) {
-                            const shape = document.getElementById(`arrow-shape-${s.id}`);
-                            const curr = shape.getAttribute('data-shape') || 1;
-                            shape.classList.remove(`shape-${curr}`);
-                            shape.classList.add(`shape-${s.data.shape}`);
-                            shape.setAttribute('data-shape', s.data.shape);
-                        }
-                        if (s.data.anim === 'true') toggleArrowAnimation(s.id);
-                    }
+                    if (s.type === 'text') { const tx = document.getElementById(`tx-${s.id}`); if(tx) tx.innerHTML = s.data.html || ''; if(s.data.toolbarHidden) toggleTextToolbar(s.id); }
+                    if (s.type === 'arrow') { if (s.data.color) changeArrowColor(s.id, s.data.color); if (s.data.shape) { const shape = document.getElementById(`arrow-shape-${s.id}`), curr = shape.getAttribute('data-shape') || 1; shape.classList.remove(`shape-${curr}`); shape.classList.add(`shape-${s.data.shape}`); shape.setAttribute('data-shape', s.data.shape); } if (s.data.anim === 'true') toggleArrowAnimation(s.id); }
                     if (s.type === 'todo') s.data.items.forEach(i => addTodoItem(s.id, i.text, i.done));
                     if (s.type === 'schedule' && s.data.items) s.data.items.forEach(i => addScheduleItem(s.id, i.subject, i.start, i.end, i.clr));
                     if (s.type === 'symbol') w.querySelector('.symbol-widget-content').innerHTML = s.data.html;
-                    if (s.type === 'stopwatch' && s.data.elapsedTime) {
-                        w.elapsedTime = s.data.elapsedTime;
-                        document.getElementById(`${s.id}-display`).innerHTML = formatStopwatchTime(w.elapsedTime);
-                    }
-                    if (s.type === 'randomizer') {
-                        if(s.data.max) document.getElementById(`rand-max-${s.id}`).value = s.data.max;
-                        if(s.data.mode) setRandomizerMode(s.id, s.data.mode);
-                        if(s.data.mode === 'group' && s.data.gsize) {
-                            setTimeout(() => {
-                                const gsi = document.getElementById(`rand-gsize-${s.id}`);
-                                if(gsi) gsi.value = s.data.gsize;
-                            }, 50);
-                        }
-                    }
-                    
+                    if (s.type === 'stopwatch' && s.data.elapsedTime) { w.elapsedTime = s.data.elapsedTime; document.getElementById(`${s.id}-display`).innerHTML = formatStopwatchTime(w.elapsedTime); }
+                    if (s.type === 'randomizer') { if(s.data.max) document.getElementById(`rand-max-${s.id}`).value = s.data.max; if(s.data.mode) setRandomizerMode(s.id, s.data.mode); if(s.data.sound === 'on') toggleWidgetSound(s.id); if(s.data.mode === 'group' && s.data.gsize) setTimeout(() => { const gsi = document.getElementById(`rand-gsize-${s.id}`); if(gsi) gsi.value = s.data.gsize; }, 50); }
+                    if (s.type === 'dice' && s.data.count) { if(s.data.sound === 'on') toggleWidgetSound(s.id); setTimeout(() => { const c = document.getElementById(`dice-count-${s.id}`); if(c) { c.value = s.data.count; renderDice(s.id); } }, 50); }
                     if (s.data.collapsed) toggleWidgetCollapse(s.id);
                 }); showStatus("Laddat!");
             }; r.readAsText(input.files[0]);
@@ -1570,79 +1563,7 @@
         function showStatus(m, t='info') { const e=document.getElementById('status-msg'); e.innerText=m; e.style.display='block'; e.style.backgroundColor=t==='success'?'#c6f6d5':'#e6fffa'; setTimeout(()=>e.style.display='none',3000); }
         function handleLocalImg(i, id = null) { const f = i.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => setAppBackground('image', e.target.result, id); r.readAsDataURL(f); } }
 
-        function openAboutModal() {
-            const modal = document.getElementById('about-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.querySelectorAll('.submenu').forEach(m => m.classList.remove('active'));
-        }
-
-        function closeAboutModal() {
-            const modal = document.getElementById('about-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function openArasaacModal() {
-            const modal = document.getElementById('arasaac-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.querySelectorAll('.submenu').forEach(m => m.classList.remove('active'));
-            setTimeout(() => document.getElementById('arasaac-search-input').focus(), 100);
-        }
-
-        function closeArasaacModal() {
-            const modal = document.getElementById('arasaac-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        async function searchArasaac() {
-            const input = document.getElementById('arasaac-search-input').value.trim();
-            const resultsDiv = document.getElementById('arasaac-results');
-            if(!input) return;
-            
-            resultsDiv.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10"><i class="fas fa-spinner fa-spin text-3xl mb-3"></i><br>Söker bildstöd...</div>';
-            
-            try {
-                const res = await fetch(`https://api.arasaac.org/api/pictograms/sv/search/${encodeURIComponent(input)}`);
-                if(!res.ok) throw new Error('Nätverksfel');
-                const data = await res.json();
-                
-                if(data.length === 0) {
-                    resultsDiv.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">Inga symboler hittades för "'+input+'". Försök med ett annat ord.</div>';
-                    return;
-                }
-                
-                resultsDiv.innerHTML = '';
-                const topResults = data.slice(0, 20);
-                
-                topResults.forEach(pic => {
-                    const imgUrl = `https://static.arasaac.org/pictograms/${pic._id}/${pic._id}_300.png`;
-                    const imgEl = document.createElement('img');
-                    imgEl.src = imgUrl;
-                    imgEl.className = 'w-full h-auto cursor-pointer hover:scale-105 transition-transform border rounded-xl p-2 bg-white shadow-sm';
-                    imgEl.title = "Klicka för att lägga till på skärmen";
-                    imgEl.onclick = () => addImageWidgetFromUrl(imgUrl);
-                    resultsDiv.appendChild(imgEl);
-                });
-            } catch (error) {
-                resultsDiv.innerHTML = '<div class="col-span-full text-center text-red-500 py-10"><i class="fas fa-exclamation-triangle text-3xl mb-3"></i><br>Kunde inte hämta bilder just nu. Försök igen senare.</div>';
-                console.error(error);
-            }
-        }
-
-        function addImageWidgetFromUrl(url) {
-            const widget = createWidget('arasaac');
-            widget.style.width = '160px';
-            widget.style.height = '160px';
-            const c = document.getElementById(`img-cont-${widget.id}`);
-            c.innerHTML = `<img src="${url}">`; 
-            closeArasaacModal();
-        }
-
-        window.onload = () => { 
-        };
+        window.onload = () => { /* Skärmen startar tom */ };
     </script>
 </body>
 </html>
