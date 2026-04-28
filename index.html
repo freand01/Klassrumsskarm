@@ -1461,6 +1461,8 @@
             if (!subject) document.getElementById(`subj-${id}`).value = '';
         }
 
+        function createSymbolWidget(t, i, l) { createWidget('symbol', `<i class="fas ${i}"></i><p>${l}</p>`, l.toUpperCase()); }
+
         function exportLayoutToFile() {
             const ws = [];
             const layer = document.getElementById('background-layer');
