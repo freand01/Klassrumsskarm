@@ -26,7 +26,21 @@
             background-repeat: no-repeat;
             z-index: -1;
             transition: background-image 0.5s ease, background-color 0.5s ease;
-            background-image: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80');
+        }
+
+        /* Screen Layers */
+        .screen-layer {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+        .screen-layer.active {
+            pointer-events: auto;
+            opacity: 1;
+            z-index: 5;
         }
 
         /* Widget Container */
@@ -356,9 +370,40 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Skärmnavigering Logik (Längst ner till höger) */
+        #screen-nav {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(15px);
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            z-index: 1000;
+            color: #444;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;
+        }
+
+        .screen-btn {
+            cursor: pointer;
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        .screen-btn:hover { background: #e5e7eb; color: #000; }
+        .screen-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        #screen-indicator { font-weight: 700; font-size: 0.85rem; min-width: 40px; text-align: center; }
+
         body.is-fullscreen #bottom-nav,
-        body.is-theater-mode #bottom-nav {
-            transform: translateX(-50%) translateY(100px);
+        body.is-theater-mode #bottom-nav,
+        body.is-fullscreen #screen-nav,
+        body.is-theater-mode #screen-nav {
+            transform: translateY(100px);
             opacity: 0;
             pointer-events: none;
         }
@@ -371,11 +416,15 @@
         body.is-fullscreen #bottom-nav-trigger,
         body.is-theater-mode #bottom-nav-trigger { height: 30px; }
         
-        body.is-fullscreen #bottom-nav-trigger:hover + #bottom-nav,
-        body.is-theater-mode #bottom-nav-trigger:hover + #bottom-nav,
+        body.is-fullscreen #bottom-nav-trigger:hover ~ #bottom-nav,
+        body.is-theater-mode #bottom-nav-trigger:hover ~ #bottom-nav,
         body.is-fullscreen #bottom-nav:hover,
-        body.is-theater-mode #bottom-nav:hover {
-            transform: translateX(-50%) translateY(0);
+        body.is-theater-mode #bottom-nav:hover,
+        body.is-fullscreen #bottom-nav-trigger:hover ~ #screen-nav,
+        body.is-theater-mode #bottom-nav-trigger:hover ~ #screen-nav,
+        body.is-fullscreen #screen-nav:hover,
+        body.is-theater-mode #screen-nav:hover {
+            transform: translateY(0);
             opacity: 1;
             pointer-events: auto;
         }
@@ -450,6 +499,7 @@
     <div id="app-canvas" class="w-full h-full relative"></div>
 
     <div id="bottom-nav-trigger"></div>
+    
     <nav id="bottom-nav">
         <!-- Verktyg -->
         <div class="nav-item hover:text-blue-500" onclick="toggleSubmenu(event, 'tools')">
@@ -522,6 +572,19 @@
         <input type="file" id="import-file-input" class="hidden" accept=".json" onchange="importLayoutFromFile(this)">
     </nav>
 
+    <!-- Skärmnavigering (Längst ner till höger) -->
+    <div id="screen-nav">
+        <button class="screen-btn" id="btn-prev-screen" onclick="switchScreen(currentScreenIndex - 1)"><i class="fas fa-chevron-left"></i></button>
+        <div class="flex flex-col items-center justify-center">
+            <input type="text" id="screen-name-input" class="bg-transparent text-center font-bold text-sm outline-none w-28 hover:bg-black/5 focus:bg-white focus:ring-2 focus:ring-blue-200 rounded transition-all" onchange="updateScreenName(this.value)" placeholder="Namn...">
+            <span id="screen-indicator" class="text-[0.6rem] text-gray-500 font-bold -mt-0.5">1 / 1</span>
+        </div>
+        <button class="screen-btn" id="btn-next-screen" onclick="switchScreen(currentScreenIndex + 1)"><i class="fas fa-chevron-right"></i></button>
+        <div class="w-px h-5 bg-gray-300 mx-1"></div>
+        <button class="screen-btn text-blue-500" onclick="addScreen()" title="Ny skärm"><i class="fas fa-plus"></i></button>
+        <button class="screen-btn text-red-500" onclick="deleteCurrentScreen()" title="Ta bort aktuell skärm"><i class="fas fa-trash"></i></button>
+    </div>
+
     <!-- Om-ruta (Modal) -->
     <div id="about-modal" class="fixed inset-0 bg-black bg-opacity-40 z-[3000] hidden items-center justify-center backdrop-blur-sm transition-opacity" onclick="if(event.target === this) closeAboutModal()">
         <div class="bg-white rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl relative text-center">
@@ -560,11 +623,140 @@
         </div>
     </div>
 
+    <!-- Bekräfta Borttagning Skärm (Modal) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-40 z-[4000] hidden items-center justify-center backdrop-blur-sm transition-opacity" onclick="if(event.target === this) closeConfirmModal()">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl text-center relative">
+            <h3 class="text-xl font-bold mb-2">Ta bort skärm?</h3>
+            <p class="text-sm text-gray-600 mb-6">Är du säker på att du vill ta bort den här skärmen och alla dess verktyg? Detta kan inte ångras.</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeConfirmModal()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-xl font-bold text-gray-700 transition-colors">Avbryt</button>
+                <button onclick="executeDeleteScreen()" class="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-xl font-bold text-white transition-colors">Ta bort</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- System state ---
         const canvas = document.getElementById('app-canvas');
         let zIndexCounter = 10;
         let widgetCount = 0;
         let activeWidget = null;
+
+        // Skärmhantering (Multi-screen)
+        let screens = [];
+        let currentScreenIndex = 0;
+        let screenIdCounter = 0;
+
+        function initScreens() {
+            screenIdCounter++;
+            screens.push({
+                id: `screen-${screenIdCounter}`,
+                name: "Skärm 1",
+                bg: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')",
+                bgColor: "transparent"
+            });
+            canvas.innerHTML = '';
+            const s = document.createElement('div');
+            s.className = 'screen-layer active';
+            s.id = screens[0].id;
+            canvas.appendChild(s);
+            
+            // FIX: Vi tvingar appen att ladda skärm 0 ordentligt så att skogen visas direkt
+            switchScreen(0);
+        }
+
+        function switchScreen(index) {
+            if (index < 0 || index >= screens.length) return;
+            
+            const oldLayer = document.getElementById(screens[currentScreenIndex].id);
+            if(oldLayer) oldLayer.classList.remove('active');
+            clearActiveWidget();
+            closeAllSettings();
+
+            currentScreenIndex = index;
+            const newLayer = document.getElementById(screens[currentScreenIndex].id);
+            if(newLayer) newLayer.classList.add('active');
+
+            const layer = document.getElementById('background-layer');
+            layer.style.backgroundImage = screens[currentScreenIndex].bg || 'none';
+            layer.style.backgroundColor = screens[currentScreenIndex].bgColor || '#1a1a1a';
+
+            updateScreenNav();
+        }
+
+        function addScreen() {
+            screenIdCounter++;
+            const newId = `screen-${screenIdCounter}`;
+            screens.push({ 
+                id: newId, 
+                name: `Skärm ${screens.length + 1}`,
+                bg: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')", 
+                bgColor: 'transparent' 
+            }); // Standard skogsbakgrund för nya skärmar
+            
+            const s = document.createElement('div');
+            s.className = 'screen-layer';
+            s.id = newId;
+            canvas.appendChild(s);
+
+            switchScreen(screens.length - 1);
+            showStatus("Ny skärm skapad!", "success");
+        }
+
+        function deleteCurrentScreen() {
+            if (screens.length <= 1) {
+                showStatus("Du måste ha minst en skärm.", "error");
+                return;
+            }
+            document.getElementById('confirm-modal').classList.remove('hidden');
+            document.getElementById('confirm-modal').classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+            document.getElementById('confirm-modal').classList.remove('flex');
+        }
+
+        function executeDeleteScreen() {
+            closeConfirmModal();
+            const idToRemove = screens[currentScreenIndex].id;
+            const el = document.getElementById(idToRemove);
+            if(el) {
+                el.querySelectorAll('.widget').forEach(w => removeWidget(w.id));
+                el.remove();
+            }
+
+            screens.splice(currentScreenIndex, 1);
+            currentScreenIndex = Math.min(currentScreenIndex, screens.length - 1);
+            
+            const newLayer = document.getElementById(screens[currentScreenIndex].id);
+            if(newLayer) newLayer.classList.add('active');
+            
+            const layer = document.getElementById('background-layer');
+            layer.style.backgroundImage = screens[currentScreenIndex].bg || 'none';
+            layer.style.backgroundColor = screens[currentScreenIndex].bgColor || '#1a1a1a';
+            
+            updateScreenNav();
+            showStatus("Skärm borttagen.", "info");
+        }
+
+        function updateScreenNav() {
+            document.getElementById('screen-indicator').innerText = `${currentScreenIndex + 1} / ${screens.length}`;
+            
+            const nameInput = document.getElementById('screen-name-input');
+            if(nameInput) nameInput.value = screens[currentScreenIndex].name || `Skärm ${currentScreenIndex + 1}`;
+            
+            const btnPrev = document.getElementById('btn-prev-screen');
+            const btnNext = document.getElementById('btn-next-screen');
+            if(btnPrev) { btnPrev.style.opacity = currentScreenIndex === 0 ? '0.3' : '1'; btnPrev.style.pointerEvents = currentScreenIndex === 0 ? 'none' : 'auto'; }
+            if(btnNext) { btnNext.style.opacity = currentScreenIndex === screens.length - 1 ? '0.3' : '1'; btnNext.style.pointerEvents = currentScreenIndex === screens.length - 1 ? 'none' : 'auto'; }
+        }
+
+        function updateScreenName(val) {
+            if(screens[currentScreenIndex]) {
+                screens[currentScreenIndex].name = val;
+            }
+        }
 
         // Spotify API hantering
         window.spotifyAPIReady = false;
@@ -590,7 +782,7 @@
         });
 
         canvas.addEventListener('mousedown', (e) => {
-            if (e.target === canvas) {
+            if (e.target === canvas || e.target.classList.contains('screen-layer')) {
                 clearActiveWidget();
                 closeAllSettings();
             }
@@ -659,8 +851,19 @@
 
         function setAppBackground(type, value, widgetId = null) {
             const layer = document.getElementById('background-layer');
-            if (type === 'image') { layer.style.backgroundImage = `url('${value}')`; layer.style.backgroundColor = 'transparent'; }
-            else if (type === 'color') { layer.style.backgroundImage = 'none'; layer.style.backgroundColor = value; }
+            const sd = screens[currentScreenIndex];
+            if (type === 'image') { 
+                layer.style.backgroundImage = `url('${value}')`; 
+                layer.style.backgroundColor = 'transparent'; 
+                sd.bg = `url('${value}')`;
+                sd.bgColor = 'transparent';
+            }
+            else if (type === 'color') { 
+                layer.style.backgroundImage = 'none'; 
+                layer.style.backgroundColor = value; 
+                sd.bg = 'none';
+                sd.bgColor = value;
+            }
             if (widgetId) removeWidget(widgetId);
         }
 
@@ -1035,7 +1238,14 @@
                 </div>
                 <div class="widget-body w-full h-full">${bodyHTML}</div>`;
             
-            canvas.appendChild(widget); 
+            // Lägg till i den aktiva skärmen istället för direkt i canvas!
+            const currentLayer = document.getElementById(screens[currentScreenIndex].id);
+            if(currentLayer) {
+                currentLayer.appendChild(widget); 
+            } else {
+                canvas.appendChild(widget); // Fallback
+            }
+            
             makeDraggableAndResizable(widget);
             makeWidgetRotatable(id);
             
@@ -1515,55 +1725,110 @@
         function addImageWidgetFromUrl(url) { const widget = createWidget('arasaac'); const c = document.getElementById(`img-cont-${widget.id}`); c.innerHTML = `<img src="${url}">`; closeArasaacModal(); }
 
         function exportLayoutToFile() {
-            const ws = []; const layer = document.getElementById('background-layer');
-            document.querySelectorAll('.widget').forEach(w => {
-                const s = { id: w.id, type: w.getAttribute('data-type'), top: w.style.top, left: w.style.left, width: w.style.width, height: w.style.height, bg: w.getAttribute('data-bg'), data: {} };
-                s.data.rotation = w.getAttribute('data-rotation') || '0'; s.data.collapsed = w.classList.contains('collapsed');
-                if (s.type === 'text') { s.data.html = document.getElementById(`tx-${w.id}`).innerHTML; const tb = document.getElementById(`tb-${w.id}`); s.data.toolbarHidden = tb && tb.style.display === 'none'; }
-                if (s.type === 'image' || s.type === 'arasaac') s.data.src = w.querySelector('img')?.src;
-                if (s.type === 'spotify') s.data.link = document.getElementById(`spot-cont-${w.id}`).getAttribute('data-link');
-                if (s.type === 'youtube') s.data.link = document.getElementById(`yt-cont-${w.id}`).getAttribute('data-link');
-                if (s.type === 'todo') s.data.items = Array.from(w.querySelectorAll('.todo-item')).map(i=>({text:i.querySelector('span').innerText, done:i.querySelector('input').checked}));
-                if (s.type === 'schedule') s.data.items = Array.from(w.querySelectorAll('.schedule-item')).map(i=>({subject:i.querySelector('.subject').innerText, start:i.querySelector('.time-start').innerText, end:i.querySelector('.time-end').innerText, clr:i.style.backgroundColor}));
-                if (s.type === 'symbol') s.data.html = w.querySelector('.symbol-widget-content').innerHTML;
-                if (s.type === 'arrow') { const wAW = document.getElementById(`arrow-anim-wrapper-${w.id}`), wSH = document.getElementById(`arrow-shape-${w.id}`); s.data.anim = wAW.getAttribute('data-anim'); s.data.shape = wSH.getAttribute('data-shape'); s.data.color = wSH.getAttribute('data-color'); }
-                if (s.type === 'stopwatch') s.data.elapsedTime = w.isRunning ? (w.elapsedTime + (Date.now() - w.startTime)) : (w.elapsedTime || 0);
-                if (s.type === 'randomizer') { s.data.mode = w.getAttribute('data-rand-mode'); s.data.max = document.getElementById(`rand-max-${w.id}`).value; const gsize = document.getElementById(`rand-gsize-${w.id}`); if(gsize) s.data.gsize = gsize.value; const sBtn = document.getElementById(`sound-toggle-${w.id}`); if (sBtn) s.data.sound = sBtn.getAttribute('data-sound'); }
-                if (s.type === 'dice') { const c = document.getElementById(`dice-count-${w.id}`); if(c) s.data.count = c.value; const sBtn = document.getElementById(`sound-toggle-${w.id}`); if (sBtn) s.data.sound = sBtn.getAttribute('data-sound'); }
-                ws.push(s);
-            });
-            const blob = new Blob([JSON.stringify({ bg: layer.style.backgroundImage, bgColor: layer.style.backgroundColor, widgets: ws }, null, 2)], { type: "application/json" });
+            // Uppdaterad för multi-screen
+            const exportData = {
+                version: 2,
+                screens: screens.map(sd => {
+                    const screenEl = document.getElementById(sd.id);
+                    const ws = [];
+                    if(screenEl) {
+                        screenEl.querySelectorAll('.widget').forEach(w => {
+                            const s = { id: w.id, type: w.getAttribute('data-type'), top: w.style.top, left: w.style.left, width: w.style.width, height: w.style.height, bg: w.getAttribute('data-bg'), data: {} };
+                            s.data.rotation = w.getAttribute('data-rotation') || '0'; s.data.collapsed = w.classList.contains('collapsed');
+                            if (s.type === 'text') { s.data.html = document.getElementById(`tx-${w.id}`).innerHTML; const tb = document.getElementById(`tb-${w.id}`); s.data.toolbarHidden = tb && tb.style.display === 'none'; }
+                            if (s.type === 'image' || s.type === 'arasaac') s.data.src = w.querySelector('img')?.src;
+                            if (s.type === 'spotify') s.data.link = document.getElementById(`spot-cont-${w.id}`).getAttribute('data-link');
+                            if (s.type === 'youtube') s.data.link = document.getElementById(`yt-cont-${w.id}`).getAttribute('data-link');
+                            if (s.type === 'todo') s.data.items = Array.from(w.querySelectorAll('.todo-item')).map(i=>({text:i.querySelector('span').innerText, done:i.querySelector('input').checked}));
+                            if (s.type === 'schedule') s.data.items = Array.from(w.querySelectorAll('.schedule-item')).map(i=>({subject:i.querySelector('.subject').innerText, start:i.querySelector('.time-start').innerText, end:i.querySelector('.time-end').innerText, clr:i.style.backgroundColor}));
+                            if (s.type === 'symbol') s.data.html = w.querySelector('.symbol-widget-content').innerHTML;
+                            if (s.type === 'arrow') { const wAW = document.getElementById(`arrow-anim-wrapper-${w.id}`), wSH = document.getElementById(`arrow-shape-${w.id}`); s.data.anim = wAW.getAttribute('data-anim'); s.data.shape = wSH.getAttribute('data-shape'); s.data.color = wSH.getAttribute('data-color'); }
+                            if (s.type === 'stopwatch') s.data.elapsedTime = w.isRunning ? (w.elapsedTime + (Date.now() - w.startTime)) : (w.elapsedTime || 0);
+                            if (s.type === 'randomizer') { s.data.mode = w.getAttribute('data-rand-mode'); s.data.max = document.getElementById(`rand-max-${w.id}`).value; const gsize = document.getElementById(`rand-gsize-${w.id}`); if(gsize) s.data.gsize = gsize.value; const sBtn = document.getElementById(`sound-toggle-${w.id}`); if (sBtn) s.data.sound = sBtn.getAttribute('data-sound'); }
+                            if (s.type === 'dice') { const c = document.getElementById(`dice-count-${w.id}`); if(c) s.data.count = c.value; const sBtn = document.getElementById(`sound-toggle-${w.id}`); if (sBtn) s.data.sound = sBtn.getAttribute('data-sound'); }
+                            ws.push(s);
+                        });
+                    }
+                    return { name: sd.name, bg: sd.bg, bgColor: sd.bgColor, widgets: ws };
+                })
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
             const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `layout-${new Date().toISOString().slice(0,10)}.json`; a.click();
         }
 
         function importLayoutFromFile(input) {
             const r = new FileReader(); r.onload = (e) => {
-                const d = JSON.parse(e.target.result); document.querySelectorAll('.widget').forEach(w => removeWidget(w.id));
-                const layer = document.getElementById('background-layer'); if (d.bg) layer.style.backgroundImage = d.bg; if (d.bgColor) layer.style.backgroundColor = d.bgColor;
-                d.widgets.forEach(s => {
-                    const w = createWidget(s.type, null, null, s.id); w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
-                    if (s.data.rotation && s.data.rotation !== '0') setWidgetRotation(s.id, parseFloat(s.data.rotation));
-                    if (s.bg) setWidgetBackground(s.id, s.bg);
-                    if ((s.type === 'image' || s.type === 'arasaac') && s.data.src) { const c = document.getElementById(`img-cont-${s.id}`); c.innerHTML = `<img src="${s.data.src}">`; if (s.type === 'image') c.classList.remove('bg-gray-50', 'border-dashed', 'border-2'); }
-                    if (s.type === 'spotify' && s.data.link) updateSpotifyEmbed(s.id, s.data.link);
-                    if (s.type === 'youtube' && s.data.link) updateYouTubeEmbed(s.id, s.data.link);
-                    if (s.type === 'text') { const tx = document.getElementById(`tx-${s.id}`); if(tx) tx.innerHTML = s.data.html || ''; if(s.data.toolbarHidden) toggleTextToolbar(s.id); }
-                    if (s.type === 'arrow') { if (s.data.color) changeArrowColor(s.id, s.data.color); if (s.data.shape) { const shape = document.getElementById(`arrow-shape-${s.id}`), curr = shape.getAttribute('data-shape') || 1; shape.classList.remove(`shape-${curr}`); shape.classList.add(`shape-${s.data.shape}`); shape.setAttribute('data-shape', s.data.shape); } if (s.data.anim === 'true') toggleArrowAnimation(s.id); }
-                    if (s.type === 'todo') s.data.items.forEach(i => addTodoItem(s.id, i.text, i.done));
-                    if (s.type === 'schedule' && s.data.items) s.data.items.forEach(i => addScheduleItem(s.id, i.subject, i.start, i.end, i.clr));
-                    if (s.type === 'symbol') w.querySelector('.symbol-widget-content').innerHTML = s.data.html;
-                    if (s.type === 'stopwatch' && s.data.elapsedTime) { w.elapsedTime = s.data.elapsedTime; document.getElementById(`${s.id}-display`).innerHTML = formatStopwatchTime(w.elapsedTime); }
-                    if (s.type === 'randomizer') { if(s.data.max) document.getElementById(`rand-max-${s.id}`).value = s.data.max; if(s.data.mode) setRandomizerMode(s.id, s.data.mode); if(s.data.sound === 'on') toggleWidgetSound(s.id); if(s.data.mode === 'group' && s.data.gsize) setTimeout(() => { const gsi = document.getElementById(`rand-gsize-${s.id}`); if(gsi) gsi.value = s.data.gsize; }, 50); }
-                    if (s.type === 'dice' && s.data.count) { if(s.data.sound === 'on') toggleWidgetSound(s.id); setTimeout(() => { const c = document.getElementById(`dice-count-${s.id}`); if(c) { c.value = s.data.count; renderDice(s.id); } }, 50); }
-                    if (s.data.collapsed) toggleWidgetCollapse(s.id);
-                }); showStatus("Laddat!");
-            }; r.readAsText(input.files[0]);
+                const d = JSON.parse(e.target.result); 
+                
+                // Rensa hela arbetsytan
+                document.querySelectorAll('.widget').forEach(w => removeWidget(w.id));
+                canvas.innerHTML = '';
+                screens = [];
+                screenIdCounter = 0;
+
+                const processWidgets = (widgets, screenId) => {
+                    const idx = screens.findIndex(s => s.id === screenId);
+                    currentScreenIndex = idx; // Se till att createWidget lägger dem i rätt skärm
+                    
+                    widgets.forEach(s => {
+                        const w = createWidget(s.type, null, null, s.id); w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
+                        if (s.data.rotation && s.data.rotation !== '0') setWidgetRotation(s.id, parseFloat(s.data.rotation));
+                        if (s.bg) setWidgetBackground(s.id, s.bg);
+                        if ((s.type === 'image' || s.type === 'arasaac') && s.data.src) { const c = document.getElementById(`img-cont-${s.id}`); c.innerHTML = `<img src="${s.data.src}">`; if (s.type === 'image') c.classList.remove('bg-gray-50', 'border-dashed', 'border-2'); }
+                        if (s.type === 'spotify' && s.data.link) updateSpotifyEmbed(s.id, s.data.link);
+                        if (s.type === 'youtube' && s.data.link) updateYouTubeEmbed(s.id, s.data.link);
+                        if (s.type === 'text') { const tx = document.getElementById(`tx-${s.id}`); if(tx) tx.innerHTML = s.data.html || ''; if(s.data.toolbarHidden) toggleTextToolbar(s.id); }
+                        if (s.type === 'arrow') { if (s.data.color) changeArrowColor(s.id, s.data.color); if (s.data.shape) { const shape = document.getElementById(`arrow-shape-${s.id}`), curr = shape.getAttribute('data-shape') || 1; shape.classList.remove(`shape-${curr}`); shape.classList.add(`shape-${s.data.shape}`); shape.setAttribute('data-shape', s.data.shape); } if (s.data.anim === 'true') toggleArrowAnimation(s.id); }
+                        if (s.type === 'todo') s.data.items.forEach(i => addTodoItem(s.id, i.text, i.done));
+                        if (s.type === 'schedule' && s.data.items) s.data.items.forEach(i => addScheduleItem(s.id, i.subject, i.start, i.end, i.clr));
+                        if (s.type === 'symbol') w.querySelector('.symbol-widget-content').innerHTML = s.data.html;
+                        if (s.type === 'stopwatch' && s.data.elapsedTime) { w.elapsedTime = s.data.elapsedTime; document.getElementById(`${s.id}-display`).innerHTML = formatStopwatchTime(w.elapsedTime); }
+                        if (s.type === 'randomizer') { if(s.data.max) document.getElementById(`rand-max-${s.id}`).value = s.data.max; if(s.data.mode) setRandomizerMode(s.id, s.data.mode); if(s.data.sound === 'on') toggleWidgetSound(s.id); if(s.data.mode === 'group' && s.data.gsize) setTimeout(() => { const gsi = document.getElementById(`rand-gsize-${s.id}`); if(gsi) gsi.value = s.data.gsize; }, 50); }
+                        if (s.type === 'dice' && s.data.count) { if(s.data.sound === 'on') toggleWidgetSound(s.id); setTimeout(() => { const c = document.getElementById(`dice-count-${s.id}`); if(c) { c.value = s.data.count; renderDice(s.id); } }, 50); }
+                        if (s.data.collapsed) toggleWidgetCollapse(s.id);
+                    });
+                };
+
+                if (d.version === 2 && d.screens) {
+                    // Ladda multiskärms-fil
+                    d.screens.forEach((sd) => {
+                        screenIdCounter++;
+                        const sid = `screen-${screenIdCounter}`;
+                        screens.push({ id: sid, name: sd.name || `Skärm ${screens.length + 1}`, bg: sd.bg, bgColor: sd.bgColor });
+                        const sEl = document.createElement('div');
+                        sEl.className = 'screen-layer';
+                        sEl.id = sid;
+                        canvas.appendChild(sEl);
+                        processWidgets(sd.widgets, sid);
+                    });
+                } else {
+                    // Bakåtkompatibilitet för gamla (1-skärms) filer
+                    screenIdCounter++;
+                    const sid = `screen-${screenIdCounter}`;
+                    const bgUrl = d.bg || "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')";
+                    const bgCol = d.bgColor || "transparent";
+                    screens.push({ id: sid, name: "Skärm 1", bg: bgUrl, bgColor: bgCol });
+                    const sEl = document.createElement('div');
+                    sEl.className = 'screen-layer';
+                    sEl.id = sid;
+                    canvas.appendChild(sEl);
+                    if(d.widgets) processWidgets(d.widgets, sid);
+                }
+
+                switchScreen(0);
+                showStatus("Laddat!");
+            }; 
+            r.readAsText(input.files[0]);
+            input.value = ""; // Nollställ så man kan importera samma fil igen
         }
 
         function showStatus(m, t='info') { const e=document.getElementById('status-msg'); e.innerText=m; e.style.display='block'; e.style.backgroundColor=t==='success'?'#c6f6d5':'#e6fffa'; setTimeout(()=>e.style.display='none',3000); }
         function handleLocalImg(i, id = null) { const f = i.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => setAppBackground('image', e.target.result, id); r.readAsDataURL(f); } }
 
-        window.onload = () => { /* Skärmen startar tom */ };
+        window.onload = () => { 
+            initScreens();
+        };
     </script>
 </body>
 </html>
