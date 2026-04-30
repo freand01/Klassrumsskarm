@@ -554,11 +554,12 @@
         <!-- System -->
         <div class="nav-item hover:text-slate-600" onclick="toggleSubmenu(event, 'system')">
             <i class="fas fa-cog"></i><span>System</span>
-            <div id="menu-system" class="submenu !min-w-[150px] !grid-cols-2">
+            <div id="menu-system" class="submenu !grid-cols-3">
                 <div class="submenu-item" onclick="createWidget('background')"><i class="fas fa-image text-slate-700"></i><span>Bakgrund</span></div>
                 <div class="submenu-item" onclick="toggleFullscreen()"><i class="fas fa-expand text-purple-600"></i><span>Helskärm</span></div>
-                <div class="submenu-item" onclick="exportLayoutToFile()"><i class="fas fa-file-download text-emerald-600"></i><span>Spara</span></div>
-                <div class="submenu-item" onclick="document.getElementById('import-file-input').click()"><i class="fas fa-file-upload text-blue-600"></i><span>Öppna</span></div>
+                <div class="submenu-item" onclick="exportLayoutToFile()"><i class="fas fa-file-download text-emerald-600"></i><span>Spara Fil</span></div>
+                <div class="submenu-item" onclick="document.getElementById('import-file-input').click()"><i class="fas fa-file-upload text-blue-600"></i><span>Öppna Fil</span></div>
+                <div class="submenu-item" onclick="resetAll()"><i class="fas fa-trash-alt text-red-500"></i><span>Rensa minnet</span></div>
             </div>
         </div>
 
@@ -1724,9 +1725,10 @@
         async function searchArasaac() { const input = document.getElementById('arasaac-search-input').value.trim(), resultsDiv = document.getElementById('arasaac-results'); if(!input) return; resultsDiv.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10"><i class="fas fa-spinner fa-spin text-3xl mb-3"></i><br>Söker bildstöd...</div>'; try { const res = await fetch(`https://api.arasaac.org/api/pictograms/sv/search/${encodeURIComponent(input)}`); if(!res.ok) throw new Error('Nätverksfel'); const data = await res.json(); if(data.length === 0) { resultsDiv.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">Inga symboler hittades.</div>'; return; } resultsDiv.innerHTML = ''; data.slice(0, 20).forEach(pic => { const imgUrl = `https://static.arasaac.org/pictograms/${pic._id}/${pic._id}_300.png`; const imgEl = document.createElement('img'); imgEl.src = imgUrl; imgEl.className = 'w-full h-auto cursor-pointer hover:scale-105 transition-transform border rounded-xl p-2 bg-white shadow-sm'; imgEl.onclick = () => addImageWidgetFromUrl(imgUrl); resultsDiv.appendChild(imgEl); }); } catch (error) { resultsDiv.innerHTML = '<div class="col-span-full text-center text-red-500 py-10">Kunde inte hämta bilder.</div>'; } }
         function addImageWidgetFromUrl(url) { const widget = createWidget('arasaac'); const c = document.getElementById(`img-cont-${widget.id}`); c.innerHTML = `<img src="${url}">`; closeArasaacModal(); }
 
-        function exportLayoutToFile() {
-            // Uppdaterad för multi-screen
-            const exportData = {
+        // --- Sparfunktioner, LocalStorage och Export ---
+        
+        function getLayoutData() {
+            return {
                 version: 2,
                 screens: screens.map(sd => {
                     const screenEl = document.getElementById(sd.id);
@@ -1752,82 +1754,153 @@
                     return { name: sd.name, bg: sd.bg, bgColor: sd.bgColor, widgets: ws };
                 })
             };
+        }
 
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+        let lastExportedJson = "";
+        let hasUnsavedChanges = false;
+        let isResetting = false;
+
+        function autoSaveToLocal() {
+            if (isResetting) return;
+            
+            const data = getLayoutData();
+            const jsonStr = JSON.stringify(data);
+            
+            // Jämför om det skett ändringar sedan senaste manuella filnedladdningen
+            if (lastExportedJson !== "" && jsonStr !== lastExportedJson) {
+                hasUnsavedChanges = true;
+            }
+            
+            localStorage.setItem('klassrum_save', jsonStr);
+        }
+
+        window.addEventListener('beforeunload', function (e) {
+            // Kastar upp webbläsarens varningsruta om man har osparade ändringar (till fil)
+            if (hasUnsavedChanges && !isResetting) {
+                e.preventDefault();
+                e.returnValue = ''; 
+            }
+        });
+
+        function resetAll() {
+            if(confirm("Vill du verkligen rensa webbläsarens minne och börja om helt från noll? Detta går inte att ångra!")) {
+                isResetting = true; // Sätter stopp för autospar under omladdningen
+                localStorage.removeItem('klassrum_save');
+                hasUnsavedChanges = false;
+                location.reload();
+            }
+        }
+
+        function exportLayoutToFile() {
+            const data = getLayoutData();
+            const jsonStr = JSON.stringify(data, null, 2);
+            
+            // Bekräftar att layouten nu är "säkrad" i en fil
+            lastExportedJson = JSON.stringify(data);
+            hasUnsavedChanges = false;
+            
+            const blob = new Blob([jsonStr], { type: "application/json" });
             const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `layout-${new Date().toISOString().slice(0,10)}.json`; a.click();
         }
 
-        function importLayoutFromFile(input) {
-            const r = new FileReader(); r.onload = (e) => {
-                const d = JSON.parse(e.target.result); 
+        function applyLayoutData(d) {
+            // Rensa hela arbetsytan innan laddning
+            document.querySelectorAll('.widget').forEach(w => removeWidget(w.id));
+            canvas.innerHTML = '';
+            screens = [];
+            screenIdCounter = 0;
+
+            const processWidgets = (widgets, screenId) => {
+                const idx = screens.findIndex(s => s.id === screenId);
+                currentScreenIndex = idx; // Tvingar createWidget att bygga i rätt skärm
                 
-                // Rensa hela arbetsytan
-                document.querySelectorAll('.widget').forEach(w => removeWidget(w.id));
-                canvas.innerHTML = '';
-                screens = [];
-                screenIdCounter = 0;
+                widgets.forEach(s => {
+                    const w = createWidget(s.type, null, null, s.id); w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
+                    if (s.data.rotation && s.data.rotation !== '0') setWidgetRotation(s.id, parseFloat(s.data.rotation));
+                    if (s.bg) setWidgetBackground(s.id, s.bg);
+                    if ((s.type === 'image' || s.type === 'arasaac') && s.data.src) { const c = document.getElementById(`img-cont-${s.id}`); c.innerHTML = `<img src="${s.data.src}">`; if (s.type === 'image') c.classList.remove('bg-gray-50', 'border-dashed', 'border-2'); }
+                    if (s.type === 'spotify' && s.data.link) updateSpotifyEmbed(s.id, s.data.link);
+                    if (s.type === 'youtube' && s.data.link) updateYouTubeEmbed(s.id, s.data.link);
+                    if (s.type === 'text') { const tx = document.getElementById(`tx-${s.id}`); if(tx) tx.innerHTML = s.data.html || ''; if(s.data.toolbarHidden) toggleTextToolbar(s.id); }
+                    if (s.type === 'arrow') { if (s.data.color) changeArrowColor(s.id, s.data.color); if (s.data.shape) { const shape = document.getElementById(`arrow-shape-${s.id}`), curr = shape.getAttribute('data-shape') || 1; shape.classList.remove(`shape-${curr}`); shape.classList.add(`shape-${s.data.shape}`); shape.setAttribute('data-shape', s.data.shape); } if (s.data.anim === 'true') toggleArrowAnimation(s.id); }
+                    if (s.type === 'todo') s.data.items.forEach(i => addTodoItem(s.id, i.text, i.done));
+                    if (s.type === 'schedule' && s.data.items) s.data.items.forEach(i => addScheduleItem(s.id, i.subject, i.start, i.end, i.clr));
+                    if (s.type === 'symbol') w.querySelector('.symbol-widget-content').innerHTML = s.data.html;
+                    if (s.type === 'stopwatch' && s.data.elapsedTime) { w.elapsedTime = s.data.elapsedTime; document.getElementById(`${s.id}-display`).innerHTML = formatStopwatchTime(w.elapsedTime); }
+                    if (s.type === 'randomizer') { if(s.data.max) document.getElementById(`rand-max-${s.id}`).value = s.data.max; if(s.data.mode) setRandomizerMode(s.id, s.data.mode); if(s.data.sound === 'on') toggleWidgetSound(s.id); if(s.data.mode === 'group' && s.data.gsize) setTimeout(() => { const gsi = document.getElementById(`rand-gsize-${s.id}`); if(gsi) gsi.value = s.data.gsize; }, 50); }
+                    if (s.type === 'dice' && s.data.count) { if(s.data.sound === 'on') toggleWidgetSound(s.id); setTimeout(() => { const c = document.getElementById(`dice-count-${s.id}`); if(c) { c.value = s.data.count; renderDice(s.id); } }, 50); }
+                    if (s.data.collapsed) toggleWidgetCollapse(s.id);
+                });
+            };
 
-                const processWidgets = (widgets, screenId) => {
-                    const idx = screens.findIndex(s => s.id === screenId);
-                    currentScreenIndex = idx; // Se till att createWidget lägger dem i rätt skärm
-                    
-                    widgets.forEach(s => {
-                        const w = createWidget(s.type, null, null, s.id); w.style.top = s.top; w.style.left = s.left; w.style.width = s.width; w.style.height = s.height;
-                        if (s.data.rotation && s.data.rotation !== '0') setWidgetRotation(s.id, parseFloat(s.data.rotation));
-                        if (s.bg) setWidgetBackground(s.id, s.bg);
-                        if ((s.type === 'image' || s.type === 'arasaac') && s.data.src) { const c = document.getElementById(`img-cont-${s.id}`); c.innerHTML = `<img src="${s.data.src}">`; if (s.type === 'image') c.classList.remove('bg-gray-50', 'border-dashed', 'border-2'); }
-                        if (s.type === 'spotify' && s.data.link) updateSpotifyEmbed(s.id, s.data.link);
-                        if (s.type === 'youtube' && s.data.link) updateYouTubeEmbed(s.id, s.data.link);
-                        if (s.type === 'text') { const tx = document.getElementById(`tx-${s.id}`); if(tx) tx.innerHTML = s.data.html || ''; if(s.data.toolbarHidden) toggleTextToolbar(s.id); }
-                        if (s.type === 'arrow') { if (s.data.color) changeArrowColor(s.id, s.data.color); if (s.data.shape) { const shape = document.getElementById(`arrow-shape-${s.id}`), curr = shape.getAttribute('data-shape') || 1; shape.classList.remove(`shape-${curr}`); shape.classList.add(`shape-${s.data.shape}`); shape.setAttribute('data-shape', s.data.shape); } if (s.data.anim === 'true') toggleArrowAnimation(s.id); }
-                        if (s.type === 'todo') s.data.items.forEach(i => addTodoItem(s.id, i.text, i.done));
-                        if (s.type === 'schedule' && s.data.items) s.data.items.forEach(i => addScheduleItem(s.id, i.subject, i.start, i.end, i.clr));
-                        if (s.type === 'symbol') w.querySelector('.symbol-widget-content').innerHTML = s.data.html;
-                        if (s.type === 'stopwatch' && s.data.elapsedTime) { w.elapsedTime = s.data.elapsedTime; document.getElementById(`${s.id}-display`).innerHTML = formatStopwatchTime(w.elapsedTime); }
-                        if (s.type === 'randomizer') { if(s.data.max) document.getElementById(`rand-max-${s.id}`).value = s.data.max; if(s.data.mode) setRandomizerMode(s.id, s.data.mode); if(s.data.sound === 'on') toggleWidgetSound(s.id); if(s.data.mode === 'group' && s.data.gsize) setTimeout(() => { const gsi = document.getElementById(`rand-gsize-${s.id}`); if(gsi) gsi.value = s.data.gsize; }, 50); }
-                        if (s.type === 'dice' && s.data.count) { if(s.data.sound === 'on') toggleWidgetSound(s.id); setTimeout(() => { const c = document.getElementById(`dice-count-${s.id}`); if(c) { c.value = s.data.count; renderDice(s.id); } }, 50); }
-                        if (s.data.collapsed) toggleWidgetCollapse(s.id);
-                    });
-                };
-
-                if (d.version === 2 && d.screens) {
-                    // Ladda multiskärms-fil
-                    d.screens.forEach((sd) => {
-                        screenIdCounter++;
-                        const sid = `screen-${screenIdCounter}`;
-                        screens.push({ id: sid, name: sd.name || `Skärm ${screens.length + 1}`, bg: sd.bg, bgColor: sd.bgColor });
-                        const sEl = document.createElement('div');
-                        sEl.className = 'screen-layer';
-                        sEl.id = sid;
-                        canvas.appendChild(sEl);
-                        processWidgets(sd.widgets, sid);
-                    });
-                } else {
-                    // Bakåtkompatibilitet för gamla (1-skärms) filer
+            if (d.version === 2 && d.screens) {
+                d.screens.forEach((sd) => {
                     screenIdCounter++;
                     const sid = `screen-${screenIdCounter}`;
-                    const bgUrl = d.bg || "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')";
-                    const bgCol = d.bgColor || "transparent";
-                    screens.push({ id: sid, name: "Skärm 1", bg: bgUrl, bgColor: bgCol });
+                    screens.push({ id: sid, name: sd.name || `Skärm ${screens.length + 1}`, bg: sd.bg, bgColor: sd.bgColor });
                     const sEl = document.createElement('div');
                     sEl.className = 'screen-layer';
                     sEl.id = sid;
                     canvas.appendChild(sEl);
-                    if(d.widgets) processWidgets(d.widgets, sid);
-                }
+                    processWidgets(sd.widgets, sid);
+                });
+            } else {
+                screenIdCounter++;
+                const sid = `screen-${screenIdCounter}`;
+                const bgUrl = d.bg || "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80')";
+                const bgCol = d.bgColor || "transparent";
+                screens.push({ id: sid, name: "Skärm 1", bg: bgUrl, bgColor: bgCol });
+                const sEl = document.createElement('div');
+                sEl.className = 'screen-layer';
+                sEl.id = sid;
+                canvas.appendChild(sEl);
+                if(d.widgets) processWidgets(d.widgets, sid);
+            }
 
-                switchScreen(0);
-                showStatus("Laddat!");
+            switchScreen(0);
+        }
+
+        function importLayoutFromFile(input) {
+            const r = new FileReader(); r.onload = (e) => {
+                try {
+                    const d = JSON.parse(e.target.result); 
+                    applyLayoutData(d);
+                    
+                    lastExportedJson = JSON.stringify(getLayoutData());
+                    hasUnsavedChanges = false;
+                    
+                    showStatus("Laddat från fil!", "success");
+                } catch(err) {
+                    showStatus("Kunde inte läsa filen.", "error");
+                }
             }; 
             r.readAsText(input.files[0]);
-            input.value = ""; // Nollställ så man kan importera samma fil igen
+            input.value = ""; // Nollställ input så man kan importera samma fil igen om man vill
         }
 
         function showStatus(m, t='info') { const e=document.getElementById('status-msg'); e.innerText=m; e.style.display='block'; e.style.backgroundColor=t==='success'?'#c6f6d5':'#e6fffa'; setTimeout(()=>e.style.display='none',3000); }
         function handleLocalImg(i, id = null) { const f = i.files[0]; if(f){ const r = new FileReader(); r.onload = (e) => setAppBackground('image', e.target.result, id); r.readAsDataURL(f); } }
 
         window.onload = () => { 
-            initScreens();
+            const savedData = localStorage.getItem('klassrum_save');
+            if (savedData) {
+                try {
+                    const d = JSON.parse(savedData);
+                    applyLayoutData(d);
+                    lastExportedJson = savedData; 
+                    hasUnsavedChanges = false;
+                    showStatus("Återställde tidigare session", "success");
+                } catch(e) {
+                    initScreens();
+                    lastExportedJson = JSON.stringify(getLayoutData());
+                }
+            } else {
+                initScreens();
+                lastExportedJson = JSON.stringify(getLayoutData());
+            }
+            
+            // Starta autospar-loopen i bakgrunden (varje 3:e sekund)
+            setInterval(autoSaveToLocal, 3000);
         };
     </script>
 </body>
