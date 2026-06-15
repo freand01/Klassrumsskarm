@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klassrumsskärm – Lärarhandbok</title>
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --blue: #2563eb;
+    --blue-light: #eff6ff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --bg: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--text);
+    background: #f8fafc;
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  .page {
+    max-width: 820px;
+    margin: 0 auto;
+    background: var(--bg);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+
+  .cover {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+    color: white;
+    padding: 64px 48px 56px;
+    text-align: center;
+  }
+
+  .cover-icon { font-size: 3rem; margin-bottom: 16px; }
+  .cover h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.02em; }
+  .cover p { font-size: 1.05rem; opacity: 0.92; max-width: 520px; margin: 0 auto; line-height: 1.6; }
+  .cover-meta { margin-top: 28px; font-size: 0.85rem; opacity: 0.75; }
+
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    padding: 16px 24px;
+    background: var(--blue-light);
+    border-bottom: 1px solid #bfdbfe;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .toolbar a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .toolbar .btn-primary { background: var(--blue); color: white; }
+  .toolbar .btn-primary:hover { background: #1d4ed8; }
+  .toolbar .btn-secondary { background: white; color: var(--blue); border: 2px solid var(--blue); }
+  .toolbar .btn-secondary:hover { background: var(--blue-light); }
+
+  .content { padding: 40px 48px 64px; }
+
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--blue);
+    margin: 48px 0 20px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--blue-light);
+    page-break-after: avoid;
+  }
+
+  h2:first-child { margin-top: 0; }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 28px 0 12px;
+    color: #374151;
+    page-break-after: avoid;
+  }
+
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 16px 24px; }
+  li { margin-bottom: 6px; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+  strong { font-weight: 700; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 0.92rem;
+    page-break-inside: avoid;
+  }
+
+  th {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-weight: 700;
+    text-align: left;
+    padding: 10px 14px;
+    border: 1px solid #bfdbfe;
+  }
+
+  td { padding: 10px 14px; border: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: #f9fafb; }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    margin: 16px 0 20px;
+    display: block;
+    page-break-inside: avoid;
+  }
+
+  pre {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 20px 24px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 16px 0 24px;
+    page-break-inside: avoid;
+  }
+
+  code {
+    font-family: 'Courier New', monospace;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.88em;
+  }
+
+  pre code { background: none; padding: 0; color: inherit; }
+  a { color: var(--blue); }
+  em { color: var(--muted); font-style: italic; }
+
+  .footer {
+    text-align: center;
+    padding: 24px 48px 40px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+  }
+
+  @media print {
+    body { background: white; }
+    .page { box-shadow: none; max-width: 100%; }
+    .toolbar { display: none; }
+    .cover { page-break-after: always; }
+    h2 { page-break-before: always; }
+    h2:first-of-type { page-break-before: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="cover">
+      <div class="cover-icon">✨</div>
+      <h1>Klassrumsskärm – Lärarhandbok</h1>
+      <p>En steg-för-steg-guide för lärare som vill använda Klassrumsskärm i undervisningen.</p>
+      <div class="cover-meta">Skapad av Fredrik Andersson, Skolförvaltningen Mölndal Stad</div>
+    </div>
+
+    <div class="toolbar">
+      <a href="LARARHANDBOK.pdf" class="btn-primary" download>📄 Ladda ner PDF</a>
+      <a href="../../index.html" class="btn-secondary">← Tillbaka till appen</a>
+    </div>
+
+    <div class="content">
+      <h1>Klassrumsskärm – Lärarhandbok</h1>
+<p>En steg-för-steg-guide för lärare som vill använda <strong>Klassrumsskärm</strong> i undervisningen.</p>
+<p>Klassrumsskärm är ett webbaserat verktyg som förvandlar din projektorskärm eller smartboard till en flexibel digital tavla. Du kan lägga till klockor, timers, text, bilder, symboler och mycket mer – och anpassa allt efter lektionens behov.</p>
+<hr>
+<h2>Innehåll</h2>
+<ol>
+<li><a href="#1-kom-ig%C3%A5ng">Kom igång</a></li>
+<li><a href="#2-%C3%B6versikt-av-gr%C3%A4nssnittet">Översikt av gränssnittet</a></li>
+<li><a href="#3-menyerna">Menyerna</a></li>
+<li><a href="#4-hantera-verktyg-widgets">Hantera verktyg (widgets)</a></li>
+<li><a href="#5-verktyg--detaljerad-guide">Verktyg – detaljerad guide</a></li>
+<li><a href="#6-skriva--detaljerad-guide">Skriva – detaljerad guide</a></li>
+<li><a href="#7-media--detaljerad-guide">Media – detaljerad guide</a></li>
+<li><a href="#8-symboler--detaljerad-guide">Symboler – detaljerad guide</a></li>
+<li><a href="#9-system--detaljerad-guide">System – detaljerad guide</a></li>
+<li><a href="#10-flera-sk%C3%A4rmar">Flera skärmar</a></li>
+<li><a href="#11-spara-och-%C3%A5teranv%C3%A4nda">Spara och återanvända</a></li>
+<li><a href="#12-tips-f%C3%B6r-klassrummet">Tips för klassrummet</a></li>
+</ol>
+<hr>
+<h2>1. Kom igång</h2>
+<h3>Steg 1: Öppna appen</h3>
+<p>Öppna <code>index.html</code> i en webbläsare (Chrome, Edge eller Firefox rekommenderas). Appen fungerar direkt – ingen installation krävs.</p>
+<h3>Steg 2: Bekanta dig med startvyn</h3>
+<p>När appen startar ser du en bakgrundsbild och två menyrader längst ner på skärmen.</p>
+<p><img src="images/01-startvy.jpg" alt="Startvy"></p>
+<ul>
+<li><strong>Nedre mitten:</strong> Huvudmenyn med alla verktyg</li>
+<li><strong>Nedre höger:</strong> Skärmnavigering (för att växla mellan olika sidor)</li>
+</ul>
+<h3>Steg 3: Lägg till ditt första verktyg</h3>
+<ol>
+<li>Klicka på <strong>Verktyg</strong> i huvudmenyn</li>
+<li>Välj till exempel <strong>Klocka</strong></li>
+<li>Verktyget visas på skärmen och kan flyttas och anpassas</li>
+</ol>
+<hr>
+<h2>2. Översikt av gränssnittet</h2>
+<h3>Huvudmenyn</h3>
+<p>Huvudmenyn innehåller sex kategorier:</p>
+<table>
+<thead>
+<tr>
+<th>Meny</th>
+<th>Syfte</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Verktyg</strong></td>
+<td>Tid, ljud, slumpning och tärningar</td>
+</tr>
+<tr>
+<td><strong>Skriva</strong></td>
+<td>Text, att-göra-listor och schema</td>
+</tr>
+<tr>
+<td><strong>Media</strong></td>
+<td>Bilder, video, PDF, Spotify och YouTube</td>
+</tr>
+<tr>
+<td><strong>Symboler</strong></td>
+<td>Visuella instruktioner och bildstöd</td>
+</tr>
+<tr>
+<td><strong>System</strong></td>
+<td>Bakgrund, helskärm, spara och ladda</td>
+</tr>
+<tr>
+<td><strong>Om</strong></td>
+<td>Information om appen</td>
+</tr>
+</tbody></table>
+<h3>Skärmnavigering</h3>
+<p>Längst ner till höger hittar du kontroller för att hantera flera skärmar (sidor):</p>
+<p><img src="images/07-skarmnavigering.jpg" alt="Skärmnavigering"></p>
+<table>
+<thead>
+<tr>
+<th>Knapp</th>
+<th>Funktion</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>◀ ▶</strong></td>
+<td>Växla mellan skärmar</td>
+</tr>
+<tr>
+<td><strong>Namnfält</strong></td>
+<td>Ge skärmen ett namn (t.ex. &quot;Lektion 1&quot;)</td>
+</tr>
+<tr>
+<td><strong>1 / 2</strong></td>
+<td>Visar vilken skärm du är på</td>
+</tr>
+<tr>
+<td><strong>+</strong></td>
+<td>Skapa en ny skärm</td>
+</tr>
+<tr>
+<td><strong>🗑</strong></td>
+<td>Ta bort aktuell skärm</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Menyerna</h2>
+<p>Klicka på en menyknapp för att öppna dess undermeny. Klicka utanför menyn eller välj ett alternativ för att stänga den.</p>
+<h3>Verktyg</h3>
+<p><img src="images/02-meny-verktyg.jpg" alt="Meny Verktyg"></p>
+<table>
+<thead>
+<tr>
+<th>Verktyg</th>
+<th>Beskrivning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Klocka</strong></td>
+<td>Digital eller analog klocka</td>
+</tr>
+<tr>
+<td><strong>Timer</strong></td>
+<td>Nedräkningstimer med visuell cirkel</td>
+</tr>
+<tr>
+<td><strong>Tidtagarur</strong></td>
+<td>Stoppur för att mäta tid</td>
+</tr>
+<tr>
+<td><strong>Ljudnivå</strong></td>
+<td>Visar klassrummets ljudnivå via mikrofon</td>
+</tr>
+<tr>
+<td><strong>Slump</strong></td>
+<td>Slumpar elevnummer eller skapar grupper</td>
+</tr>
+<tr>
+<td><strong>Tärningar</strong></td>
+<td>Virtuella tärningar (1–6 st)</td>
+</tr>
+</tbody></table>
+<h3>Skriva</h3>
+<p><img src="images/03-meny-skriva.jpg" alt="Meny Skriva"></p>
+<table>
+<thead>
+<tr>
+<th>Verktyg</th>
+<th>Beskrivning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Notering</strong></td>
+<td>Textfält med formateringsverktyg</td>
+</tr>
+<tr>
+<td><strong>Att göra</strong></td>
+<td>Checklista för uppgifter</td>
+</tr>
+<tr>
+<td><strong>Schema</strong></td>
+<td>Dags- eller lektionsschema med tider</td>
+</tr>
+</tbody></table>
+<h3>Media</h3>
+<p><img src="images/04-meny-media.jpg" alt="Meny Media"></p>
+<table>
+<thead>
+<tr>
+<th>Verktyg</th>
+<th>Beskrivning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Bild</strong></td>
+<td>Visa en bild från din dator</td>
+</tr>
+<tr>
+<td><strong>Video</strong></td>
+<td>Spela upp en videofil</td>
+</tr>
+<tr>
+<td><strong>PDF</strong></td>
+<td>Visa ett PDF-dokument</td>
+</tr>
+<tr>
+<td><strong>Spotify</strong></td>
+<td>Bädda in musik från Spotify</td>
+</tr>
+<tr>
+<td><strong>YouTube</strong></td>
+<td>Bädda in en YouTube-video</td>
+</tr>
+</tbody></table>
+<h3>Symboler</h3>
+<p><img src="images/05-meny-symboler.jpg" alt="Meny Symboler"></p>
+<table>
+<thead>
+<tr>
+<th>Verktyg</th>
+<th>Beskrivning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Tyst</strong></td>
+<td>Symbol för tyst arbete</td>
+</tr>
+<tr>
+<td><strong>Viska</strong></td>
+<td>Symbol för viskning</td>
+</tr>
+<tr>
+<td><strong>Granne</strong></td>
+<td>Symbol för att prata med granne</td>
+</tr>
+<tr>
+<td><strong>Grupp</strong></td>
+<td>Symbol för grupparbete</td>
+</tr>
+<tr>
+<td><strong>Pilar</strong></td>
+<td>Riktade pilar för att peka ut saker</td>
+</tr>
+<tr>
+<td><strong>Sök bild</strong></td>
+<td>Sök bildstöd från ARASAAC</td>
+</tr>
+</tbody></table>
+<h3>System</h3>
+<p><img src="images/06-meny-system.jpg" alt="Meny System"></p>
+<table>
+<thead>
+<tr>
+<th>Funktion</th>
+<th>Beskrivning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Bakgrund</strong></td>
+<td>Ändra bakgrundsbild eller färg</td>
+</tr>
+<tr>
+<td><strong>Helskärm</strong></td>
+<td>Visa appen i helskärmsläge</td>
+</tr>
+<tr>
+<td><strong>Spara Fil</strong></td>
+<td>Exportera din layout till en fil</td>
+</tr>
+<tr>
+<td><strong>Öppna Fil</strong></td>
+<td>Importera en sparad layout</td>
+</tr>
+<tr>
+<td><strong>Rensa minnet</strong></td>
+<td>Radera allt och börja om från början</td>
+</tr>
+</tbody></table>
+<h3>Om</h3>
+<p>Klicka på <strong>Om</strong> för att se information om appen, vem som skapat den och användarvillkor.</p>
+<p><img src="images/08-om-dialog.jpg" alt="Om-dialog"></p>
+<hr>
+<h2>4. Hantera verktyg (widgets)</h2>
+<p>Varje verktyg du lägger till kallas ett <strong>widget</strong>. Alla widgets kan flyttas, ändras i storlek och anpassas.</p>
+<h3>Markera ett verktyg</h3>
+<p>Klicka på ett verktyg för att markera det. En blå ram visas runt verktyget och en <strong>verktygsrad</strong> dyker upp ovanför.</p>
+<p><img src="images/28-widget-verktygsrad.jpg" alt="Verktygsrad"></p>
+<h3>Verktygsradens knappar</h3>
+<table>
+<thead>
+<tr>
+<th>Knapp</th>
+<th>Funktion</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>−</strong></td>
+<td>Fäll in verktyget (visar bara en liten ikon)</td>
+</tr>
+<tr>
+<td><strong>⋮</strong></td>
+<td>Öppna stilmeny – välj bakgrundsfärg</td>
+</tr>
+<tr>
+<td><strong>🗑</strong></td>
+<td>Ta bort verktyget</td>
+</tr>
+<tr>
+<td><strong>↻</strong> (blå cirkel)</td>
+<td>Rotera verktyget fritt</td>
+</tr>
+</tbody></table>
+<p>Vissa verktyg har extra knappar i verktygsraden, till exempel:</p>
+<ul>
+<li><strong>Klocka:</strong> DIGI / ANA – växla mellan digital och analog visning</li>
+<li><strong>Notering:</strong> Pil uppåt – dölj/visa textverktygsraden</li>
+<li><strong>Pil:</strong> Form, animation och färgval</li>
+</ul>
+<h3>Flytta ett verktyg</h3>
+<ol>
+<li>Klicka på verktyget för att markera det</li>
+<li>Dra verktyget till önskad position</li>
+<li>Släpp musknappen</li>
+</ol>
+<h3>Ändra storlek</h3>
+<ol>
+<li>Markera verktyget</li>
+<li>Dra i kanterna eller hörnen (små osynliga handtag runt verktyget)</li>
+<li>Släpp när storleken är lagom</li>
+</ol>
+<h3>Rotera</h3>
+<ol>
+<li>Markera verktyget</li>
+<li>Dra i den blå cirkeln med uppdateringsikonen (↻) till höger om verktyget</li>
+<li>Släpp när vinkeln är rätt</li>
+</ol>
+<h3>Ändra bakgrundsfärg på verktyget</h3>
+<ol>
+<li>Markera verktyget</li>
+<li>Klicka på <strong>⋮</strong> (tre prickar) i verktygsraden</li>
+<li>Välj en färg – eller transparent för att bara visa innehållet</li>
+</ol>
+<h3>Exempel på en färdig layout</h3>
+<p>Här är ett exempel på hur flera verktyg kan kombineras på en skärm:</p>
+<p><img src="images/30-exempel-layout.jpg" alt="Exempel-layout"></p>
+<hr>
+<h2>5. Verktyg – detaljerad guide</h2>
+<h3>Klocka</h3>
+<p><img src="images/10-widget-klocka.jpg" alt="Klocka"></p>
+<p><strong>Användning:</strong> Visa aktuell tid för eleverna.</p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Verktyg → Klocka</li>
+<li>Klockan visas i digitalt läge (00:00:00)</li>
+<li>Klicka <strong>ANA</strong> i verktygsraden för analog klocka</li>
+<li>Klicka <strong>DIGI</strong> för att gå tillbaka till digital visning</li>
+</ol>
+<p><strong>Tips:</strong> Använd den analoga klockan när eleverna ska öva tid.</p>
+<hr>
+<h3>Timer</h3>
+<p><img src="images/11-widget-timer.jpg" alt="Timer"></p>
+<p><strong>Användning:</strong> Nedräkning för aktiviteter, stationer eller raster.</p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Verktyg → Timer</li>
+<li>Skriv in antal minuter i rutan (t.ex. <code>10</code>)</li>
+<li>Klicka <strong>▶</strong> (play) för att starta</li>
+<li>Klicka <strong>↺</strong> (återställ) för att börja om</li>
+<li>Klicka <strong>🔊</strong> för att slå på/av ljudsignal när tiden är ute</li>
+</ol>
+<p>Den gröna cirkeln krymper allteftersom tiden går.</p>
+<p><strong>Tips:</strong> Sätt timern på 5 minuter vid grupparbete så att eleverna ser hur mycket tid som återstår.</p>
+<hr>
+<h3>Tidtagarur</h3>
+<p><img src="images/12-widget-tidtagarur.jpg" alt="Tidtagarur"></p>
+<p><strong>Användning:</strong> Mäta hur lång tid något tar.</p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Verktyg → Tidtagarur</li>
+<li>Klicka <strong>START</strong> för att börja mäta</li>
+<li>Klicka igen för att pausa</li>
+<li>Klicka <strong>NOLLSTÄLL</strong> för att återställa till 00:00</li>
+</ol>
+<hr>
+<h3>Ljudnivå</h3>
+<p><img src="images/13-widget-ljudniva.jpg" alt="Ljudnivå"></p>
+<p><strong>Användning:</strong> Visa klassrummets ljudnivå visuellt – bra för att träna eleverna i att hålla lagom volym.</p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Verktyg → Ljudnivå</li>
+<li>Klicka <strong>MIKROFON</strong></li>
+<li>Webbläsaren frågar om tillåtelse – klicka <strong>Tillåt</strong></li>
+<li>En färgad stapel visar ljudnivån (grönt = tyst, rött = högt)</li>
+</ol>
+<p><strong>Tips:</strong> Placera widgeten synligt och utmana klassen: &quot;Kan vi hålla stapeln grön?&quot;</p>
+<hr>
+<h3>Slump (elevslumpare)</h3>
+<p><img src="images/14-widget-slump.jpg" alt="Slump – hjul"></p>
+<p><strong>Användning:</strong> Slumpa fram elevnummer eller skapa slumpmässiga grupper.</p>
+<p><strong>Så här gör du – Hjul-läge:</strong></p>
+<ol>
+<li>Verktyg → Slump</li>
+<li>Ange antal elever i fältet <strong>ELEVER</strong> (t.ex. <code>25</code>)</li>
+<li>Klicka <strong>SNURRA</strong> i mitten av hjulet</li>
+<li>Hjulet snurrar och stannar på ett nummer</li>
+</ol>
+<p><strong>Så här gör du – Grupp-läge:</strong></p>
+<ol>
+<li>Klicka <strong>GRUPP</strong> högst upp i widgeten</li>
+<li>Ange <strong>GRUPPSTORLEK</strong> (t.ex. <code>4</code>)</li>
+<li>Klicka <strong>SKAPA</strong></li>
+</ol>
+<p><img src="images/27-widget-slump-grupp.jpg" alt="Slump – grupp"></p>
+<p><strong>Tips:</strong> Slå på ljudet med högtalarikonen om du vill ha ljudeffekt vid snurrning.</p>
+<hr>
+<h3>Tärningar</h3>
+<p><img src="images/15-widget-tarningar.jpg" alt="Tärningar"></p>
+<p><strong>Användning:</strong> Slumpa tal i matematiklektionen eller spel.</p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Verktyg → Tärningar</li>
+<li>Välj antal tärningar (1–6) i rullgardinsmenyn</li>
+<li>Klicka <strong>KASTA</strong> eller klicka direkt på tärningsytan</li>
+<li>Tärningarna rullar och visar nya värden</li>
+</ol>
+<hr>
+<h2>6. Skriva – detaljerad guide</h2>
+<h3>Notering</h3>
+<p><img src="images/16-widget-notering.jpg" alt="Notering"></p>
+<p><strong>Användning:</strong> Skriv instruktioner, mål eller meddelanden till klassen.</p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Skriva → Notering</li>
+<li>Klicka i textfältet och skriv</li>
+<li>Använd verktygsraden för formatering:<ul>
+<li><strong>B</strong> = fetstil</li>
+<li><strong>I</strong> = kursiv</li>
+<li><strong>U</strong> = understruken</li>
+<li>Punktlista</li>
+<li>Teckensnitt och storlek</li>
+</ul>
+</li>
+</ol>
+<p><strong>Tips:</strong> Skriv &quot;Dagens mål:&quot; i fetstil och placera widgeten högst upp på skärmen.</p>
+<hr>
+<h3>Att göra</h3>
+<p><img src="images/17-widget-att-gora.jpg" alt="Att göra"></p>
+<p><strong>Användning:</strong> Checklista som eleverna kan följa under lektionen.</p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Skriva → Att göra</li>
+<li>Skriv en uppgift i textfältet längst ner</li>
+<li>Tryck <strong>Enter</strong> eller klicka <strong>+</strong></li>
+<li>Klicka på en uppgift för att markera den som klar (bockas av)</li>
+</ol>
+<hr>
+<h3>Schema</h3>
+<p><img src="images/18-widget-schema.jpg" alt="Schema"></p>
+<p><strong>Användning:</strong> Visa dagens eller lektionens schema med tider.</p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Skriva → Schema</li>
+<li>Fyll i <strong>Ämne</strong> (t.ex. &quot;Matematik&quot;)</li>
+<li>Ange <strong>starttid</strong> och <strong>sluttid</strong> (t.ex. <code>08.10</code> och <code>09.00</code>)</li>
+<li>Välj en färg med färgväljaren</li>
+<li>Klicka <strong>+ LÄGG TILL</strong></li>
+<li>Upprepa för fler lektioner</li>
+</ol>
+<p>Varje tillagd lektion visas i en färgkodad rad ovanför.</p>
+<hr>
+<h2>7. Media – detaljerad guide</h2>
+<h3>Bild</h3>
+<p><img src="images/19-widget-bild.jpg" alt="Bild"></p>
+<ol>
+<li>Media → Bild</li>
+<li>Klicka <strong>VÄLJ BILD</strong></li>
+<li>Välj en bildfil från din dator</li>
+<li>Bilden visas i widgeten – ändra storlek efter behov</li>
+</ol>
+<h3>Video</h3>
+<p><img src="images/20-widget-video.jpg" alt="Video"></p>
+<ol>
+<li>Media → Video</li>
+<li>Klicka <strong>VÄLJ VIDEO</strong></li>
+<li>Välj en videofil från din dator</li>
+</ol>
+<h3>PDF</h3>
+<p><img src="images/21-widget-pdf.jpg" alt="PDF"></p>
+<ol>
+<li>Media → PDF</li>
+<li>Klicka <strong>VÄLJ PDF</strong></li>
+<li>Välj en PDF-fil – den visas direkt i widgeten</li>
+</ol>
+<h3>Spotify</h3>
+<p><img src="images/22-widget-spotify.jpg" alt="Spotify"></p>
+<ol>
+<li>Media → Spotify</li>
+<li>Kopiera en Spotify-länk (låt, album eller spellista)</li>
+<li>Klistra in länken och klicka <strong>LADDA</strong></li>
+<li>Använd play-knappen i verktygsraden för att styra uppspelningen</li>
+</ol>
+<p><strong>Obs:</strong> Du behöver vara inloggad på Spotify i webbläsaren för att spela hela låtar.</p>
+<h3>YouTube</h3>
+<p><img src="images/23-widget-youtube.jpg" alt="YouTube"></p>
+<ol>
+<li>Media → YouTube</li>
+<li>Klistra in en YouTube-länk</li>
+<li>Klicka <strong>LADDA</strong></li>
+<li>Videon visas i widgeten</li>
+</ol>
+<hr>
+<h2>8. Symboler – detaljerad guide</h2>
+<p>Symboler hjälper dig att ge tydliga, visuella instruktioner till klassen utan att behöva säga något.</p>
+<h3>Färdiga symbolspråk</h3>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Betydelse</th>
+<th>Bild</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Tyst</strong></td>
+<td>Eleverna ska vara helt tysta</td>
+<td><img src="images/25-widget-symbol-tyst.jpg" alt="Symbol Tyst"></td>
+</tr>
+<tr>
+<td><strong>Viska</strong></td>
+<td>Eleverna får viska</td>
+<td>(se menyn Symboler)</td>
+</tr>
+<tr>
+<td><strong>Granne</strong></td>
+<td>Prata med personen bredvid</td>
+<td>(se menyn Symboler)</td>
+</tr>
+<tr>
+<td><strong>Grupp</strong></td>
+<td>Arbeta i grupp</td>
+<td>(se menyn Symboler)</td>
+</tr>
+</tbody></table>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Symboler → välj symbol</li>
+<li>Placera symbolen synligt på skärmen</li>
+<li>Byt symbol när aktiviteten ändras</li>
+</ol>
+<h3>Pilar</h3>
+<p><img src="images/24-widget-pil.jpg" alt="Pil"></p>
+<p><strong>Användning:</strong> Peka ut saker på skärmen, tavlan eller i rummet.</p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Symboler → Pilar</li>
+<li>Använd verktygsraden för att:<ul>
+<li>Byta <strong>form</strong> (flera pilvarianter)</li>
+<li>Slå på <strong>animation</strong> (pulserande effekt)</li>
+<li>Välja <strong>färg</strong></li>
+</ul>
+</li>
+</ol>
+<h3>Sök bild (ARASAAC)</h3>
+<p><img src="images/09-arasaac-sok.jpg" alt="ARASAAC-sök"></p>
+<p><strong>Användning:</strong> Hitta och lägga till bildstöd (piktogram) från ARASAAC – gratis material för kommunikation och bildstöd.</p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>Symboler → Sök bild</li>
+<li>Skriv ett sökord på svenska (t.ex. &quot;äpple&quot;, &quot;skola&quot;, &quot;tyst&quot;)</li>
+<li>Klicka <strong>SÖK</strong></li>
+<li>Klicka på en bild för att lägga till den på skärmen</li>
+</ol>
+<hr>
+<h2>9. System – detaljerad guide</h2>
+<h3>Bakgrund</h3>
+<p><img src="images/26-widget-bakgrund.jpg" alt="Bakgrund"></p>
+<p><strong>Så här gör du:</strong></p>
+<ol>
+<li>System → Bakgrund (eller lägg till Bakgrund-widgeten)</li>
+<li>Välj antingen:<ul>
+<li><strong>LADDA UPP FRÅN DATOR</strong> – egen bakgrundsbild</li>
+<li><strong>Fast färg</strong> – klicka på en färgruta</li>
+</ul>
+</li>
+</ol>
+<p>Bakgrunden gäller för den aktuella skärmen.</p>
+<h3>Helskärm</h3>
+<ol>
+<li>System → Helskärm</li>
+<li>Appen fyller hela skärmen</li>
+<li>Menyerna döljs – <strong>för musen till skärmens nederkant</strong> för att visa dem igen</li>
+<li>Tryck <strong>Esc</strong> eller klicka Helskärm igen för att avsluta</li>
+</ol>
+<h3>Spara och öppna fil</h3>
+<p>Se avsnitt <a href="#11-spara-och-%C3%A5teranv%C3%A4nda">11. Spara och återanvända</a>.</p>
+<h3>Rensa minnet</h3>
+<ol>
+<li>System → Rensa minnet</li>
+<li>Bekräfta i dialogrutan</li>
+<li>Allt raderas och appen laddas om</li>
+</ol>
+<p><strong>Varning:</strong> Detta går inte att ångra. Spara din layout till fil först om du vill behålla den.</p>
+<hr>
+<h2>10. Flera skärmar</h2>
+<p>Du kan skapa flera skärmar (sidor) – till exempel en skärm per lektionsmoment.</p>
+<h3>Skapa en ny skärm</h3>
+<ol>
+<li>Klicka på <strong>+</strong> i skärmnavigeringen (nere till höger)</li>
+<li>En ny tom skärm skapas</li>
+<li>Ge skärmen ett namn i namnfältet (t.ex. &quot;Intro&quot;, &quot;Grupparbete&quot;, &quot;Avslutning&quot;)</li>
+</ol>
+<h3>Växla mellan skärmar</h3>
+<ul>
+<li>Klicka <strong>◀</strong> eller <strong>▶</strong> i skärmnavigeringen</li>
+<li>Varje skärm har sina egna verktyg och bakgrund</li>
+</ul>
+<h3>Ta bort en skärm</h3>
+<ol>
+<li>Navigera till skärmen du vill ta bort</li>
+<li>Klicka på <strong>🗑</strong> i skärmnavigeringen</li>
+<li>Bekräfta i dialogrutan</li>
+</ol>
+<p><img src="images/29-bekrafta-ta-bort-skarm.jpg" alt="Bekräfta borttagning"></p>
+<p><strong>Obs:</strong> Du kan inte ta bort den sista skärmen.</p>
+<hr>
+<h2>11. Spara och återanvända</h2>
+<p>Appen sparar automatiskt ditt arbete i webbläsarens minne (localStorage). När du öppnar appen igen i samma webbläsare finns dina skärmar kvar.</p>
+<h3>Spara till fil (rekommenderas)</h3>
+<p>För att säkert spara och kunna använda layouten på en annan dator:</p>
+<ol>
+<li>System → <strong>Spara Fil</strong></li>
+<li>En JSON-fil laddas ner till din dator (t.ex. <code>layout-2026-06-15.json</code>)</li>
+<li>Döp filen tydligt, t.ex. <code>Matematik-år-5.json</code></li>
+</ol>
+<h3>Öppna sparad fil</h3>
+<ol>
+<li>System → <strong>Öppna Fil</strong></li>
+<li>Välj din sparade JSON-fil</li>
+<li>Hela layouten laddas – alla skärmar, verktyg och inställningar</li>
+</ol>
+<h3>Tips om sparning</h3>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Rekommendation</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Samma dator varje dag</td>
+<td>Autospar räcker ofta</td>
+</tr>
+<tr>
+<td>Delad dator eller flera enheter</td>
+<td>Spara till fil regelbundet</td>
+</tr>
+<tr>
+<td>Ny termin</td>
+<td>Spara gamla layouter och skapa nya</td>
+</tr>
+<tr>
+<td>Innan &quot;Rensa minnet&quot;</td>
+<td>Spara alltid till fil först</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>12. Tips för klassrummet</h2>
+<h3>Innan lektionen</h3>
+<ol>
+<li><strong>Förbered dina skärmar</strong> – skapa en skärm per aktivitet</li>
+<li><strong>Spara till fil</strong> – så du inte förlorar arbetet</li>
+<li><strong>Testa mikrofonen</strong> om du ska använda Ljudnivå</li>
+<li><strong>Kontrollera helskärmsläge</strong> på projektorn</li>
+</ol>
+<h3>Under lektionen</h3>
+<ul>
+<li>Använd <strong>symboler</strong> (Tyst, Viska, Grupp) istället för att upprepa instruktioner</li>
+<li>Placera <strong>timern</strong> synligt under stationer eller skrivövningar</li>
+<li>Använd <strong>slump-hjulet</strong> för att välja elever rättvist</li>
+<li><strong>Fäll in</strong> verktyg du inte behöver just nu (knappen <strong>−</strong>)</li>
+</ul>
+<h3>Efter lektionen</h3>
+<ul>
+<li>Spara layouten om du vill återanvända den</li>
+<li>Eller rensa och förbered inför nästa klass</li>
+</ul>
+<h3>Kortkommandon och beteenden</h3>
+<table>
+<thead>
+<tr>
+<th>Åtgärd</th>
+<th>Hur</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Dölj menyer i helskärm</td>
+<td>Menyerna visas när du för musen till skärmens nederkant</td>
+</tr>
+<tr>
+<td>Avmarkera verktyg</td>
+<td>Klicka på en tom yta på bakgrunden</td>
+</tr>
+<tr>
+<td>Stäng undermeny</td>
+<td>Klicka utanför menyn</td>
+</tr>
+<tr>
+<td>Varning vid stängning</td>
+<td>Appen varnar om du har osparade ändringar (ej exporterade till fil)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Snabbreferens</h2>
+<pre><code>STARTA APPEN
+  └─ Öppna index.html i webbläsaren
+
+LÄGG TILL VERKTYG
+  └─ Klicka meny (Verktyg/Skriva/Media/Symboler) → Välj verktyg
+
+ANPASSA VERKTYG
+  └─ Klicka verktyg → Dra / Ändra storlek / Rotera / Verktygsrad
+
+FLERA SKÄRMAR
+  └─ + (skapa) | ◀ ▶ (växla) | 🗑 (ta bort)
+
+SPARA
+  └─ System → Spara Fil
+
+LADDA
+  └─ System → Öppna Fil
+</code></pre>
+<hr>
+<p><em>Klassrumsskärm är skapad av Fredrik Andersson, Skolförvaltningen Mölndal Stad. Verktyget är fritt att använda för personligt bruk i undervisningssyfte.</em></p>
+
+    </div>
+
+    <div class="footer">
+      Klassrumsskärm är fritt att använda för personligt bruk i undervisningssyfte.
+    </div>
+  </div>
+</body>
+</html>
