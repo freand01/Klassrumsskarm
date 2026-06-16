@@ -1,0 +1,26 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "manual": "node scripts/generate-manual.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/freand01/klassrumsskarm.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/freand01/klassrumsskarm/issues"
+  },
+  "homepage": "https://github.com/freand01/klassrumsskarm#readme",
+  "devDependencies": {
+    "marked": "^18.0.5",
+    "playwright": "^1.61.0",
+    "sharp": "^0.35.1"
+  }
+}
