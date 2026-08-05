@@ -272,6 +272,193 @@
         .dot-ml { grid-area: d; } .dot-mr { grid-area: f; }
         .dot-bl { grid-area: g; } .dot-br { grid-area: i; }
 
+        /* Slumphjul */
+        .wheel-stage {
+            position: relative;
+            width: 88%;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .wheel-rim {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            padding: 7px;
+            background:
+                radial-gradient(circle at 30% 25%, rgba(255,255,255,0.55), transparent 45%),
+                linear-gradient(160deg, #fbcfe8 0%, #f472b6 42%, #be185d 100%);
+            box-shadow:
+                0 10px 28px rgba(190, 24, 93, 0.28),
+                0 2px 8px rgba(0,0,0,0.12),
+                inset 0 1px 2px rgba(255,255,255,0.65),
+                inset 0 -2px 4px rgba(136, 19, 55, 0.25);
+            position: relative;
+        }
+        .wheel-rim::before {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            border: 1.5px dashed rgba(255,255,255,0.35);
+            pointer-events: none;
+            z-index: 2;
+        }
+        .wheel-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                inset 0 0 24px rgba(0,0,0,0.18),
+                inset 0 0 0 1px rgba(255,255,255,0.15);
+            transition: transform 4.2s cubic-bezier(0.12, 0.82, 0.18, 1);
+            will-change: transform;
+        }
+        .wheel-inner::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 28%, rgba(255,255,255,0.22), transparent 42%);
+            pointer-events: none;
+            z-index: 3;
+        }
+        .wheel-label {
+            position: absolute;
+            width: 50%;
+            height: 22px;
+            top: 50%;
+            left: 50%;
+            transform-origin: 0% 50%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 9%;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.02em;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.35), 0 0 8px rgba(0,0,0,0.15);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .wheel-label span {
+            display: inline-block;
+            transform: rotate(90deg);
+            line-height: 1;
+        }
+        .wheel-pointer {
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            filter: drop-shadow(0 4px 8px rgba(136, 19, 55, 0.4));
+            pointer-events: none;
+        }
+        .wheel-pointer svg {
+            display: block;
+            width: 28px;
+            height: 36px;
+        }
+        .wheel-hub {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 25;
+            width: 4.6rem;
+            height: 4.6rem;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: linear-gradient(155deg, #ffffff 0%, #fdf2f8 55%, #fce7f3 100%);
+            border: 3px solid #fff;
+            box-shadow:
+                0 6px 20px rgba(190, 24, 93, 0.35),
+                0 0 0 5px rgba(244, 114, 182, 0.18),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s;
+            user-select: none;
+        }
+        .wheel-hub:hover {
+            transform: translate(-50%, -50%) scale(1.07);
+            box-shadow:
+                0 8px 24px rgba(190, 24, 93, 0.42),
+                0 0 0 6px rgba(244, 114, 182, 0.22),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        .wheel-hub:active { transform: translate(-50%, -50%) scale(0.96); }
+        .wheel-hub.spinning {
+            pointer-events: none;
+            animation: wheel-hub-pulse 0.9s ease-in-out infinite;
+        }
+        .wheel-hub .hub-label {
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            color: #db2777;
+            line-height: 1;
+        }
+        .wheel-hub .hub-icon {
+            font-size: 0.7rem;
+            color: #f472b6;
+            margin-bottom: 2px;
+            opacity: 0.9;
+        }
+        .wheel-result {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 28;
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.7);
+            transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.2, 0.9, 0.2, 1.2);
+        }
+        .wheel-result.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .wheel-result-badge {
+            min-width: 4.8rem;
+            padding: 0.55rem 0.85rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #fb7185, #db2777);
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(190, 24, 93, 0.45);
+            white-space: nowrap;
+        }
+        .wheel-result-badge small {
+            display: block;
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            opacity: 0.85;
+            margin-bottom: 1px;
+        }
+        @keyframes wheel-hub-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 6px 20px rgba(190, 24, 93, 0.35), 0 0 0 5px rgba(244, 114, 182, 0.18); }
+            50% { transform: translate(-50%, -50%) scale(1.04); box-shadow: 0 8px 28px rgba(190, 24, 93, 0.5), 0 0 0 8px rgba(244, 114, 182, 0.28); }
+        }
+        @keyframes wheel-pointer-nudge {
+            0%, 100% { transform: translateX(-50%) rotate(0deg); }
+            25% { transform: translateX(-50%) rotate(-8deg); }
+            55% { transform: translateX(-50%) rotate(6deg); }
+            75% { transform: translateX(-50%) rotate(-3deg); }
+        }
+        .wheel-pointer.ticking { animation: wheel-pointer-nudge 0.18s ease-in-out infinite; }
+
         /* Widget Rotation Handtag */
         .widget-rotate-handle {
             position: absolute;
@@ -1290,32 +1477,56 @@
             const mode = w.getAttribute('data-rand-mode') || 'wheel';
             
             if (mode === 'wheel') {
-                const colors = ['#ef4444', '#3b82f6', '#10b981', '#eab308', '#ec4899', '#8b5cf6', '#f97316', '#14b8a6'];
+                // Harmonisk, modern palett – fortfarande tydlig på projektor
+                const colors = ['#f43f5e', '#fb923c', '#fbbf24', '#34d399', '#22d3ee', '#60a5fa', '#a78bfa', '#f472b6'];
                 const sliceAngle = 360 / max;
+                const gap = Math.min(0.55, sliceAngle * 0.08);
                 let gradient = [];
                 for(let i=0; i<max; i++) {
-                    gradient.push(`${colors[i % colors.length]} ${i*sliceAngle}deg ${(i+1)*sliceAngle}deg`);
+                    const start = i * sliceAngle;
+                    const end = (i + 1) * sliceAngle;
+                    gradient.push(`${colors[i % colors.length]} ${start}deg ${end - gap}deg`);
+                    gradient.push(`rgba(255,255,255,0.45) ${end - gap}deg ${end}deg`);
                 }
-                
-                let wheelHTML = `<div class="w-[85%] aspect-square rounded-full shadow-inner border-4 border-white overflow-hidden relative" style="background: conic-gradient(${gradient.join(', ')}); transition: transform 4s cubic-bezier(0.1, 0.9, 0.2, 1); transform: rotate(0deg);" id="wheel-inner-${id}" data-rotation="0">`;
-                
+
+                const labelSize = max > 40 ? '0.58rem' : max > 20 ? '0.72rem' : '0.92rem';
+                let labelsHTML = '';
                 for(let i=0; i<max; i++) {
                     const rotation = i * sliceAngle + sliceAngle / 2;
-                    wheelHTML += `
-                        <div style="position: absolute; width: 50%; height: 20px; top: 50%; left: 50%; transform-origin: 0% 50%; transform: translateY(-50%) rotate(${rotation - 90}deg); display: flex; align-items: center; justify-content: flex-end; padding-right: 8%; font-weight: 800; color: white; font-size: ${max>20?'0.7rem':'0.9rem'}; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-                            <span style="transform: rotate(90deg); display:inline-block;">${i+1}</span>
+                    labelsHTML += `
+                        <div class="wheel-label" style="transform: translateY(-50%) rotate(${rotation - 90}deg); font-size: ${labelSize};">
+                            <span>${i+1}</span>
                         </div>`;
                 }
-                wheelHTML += `</div>`;
-                
+
                 content.innerHTML = `
-                    <div class="w-full h-full relative flex items-center justify-center py-2">
-                        <div class="absolute top-1 z-20 w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-slate-800 drop-shadow-md"></div>
-                        
-                        ${wheelHTML}
-                        
-                        <div class="absolute w-16 h-16 bg-white rounded-full shadow-2xl border-4 border-gray-100 z-20 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" onclick="spinRandomizerWheel('${id}')">
-                            <span class="font-bold text-[10px] text-pink-600 tracking-wider">SNURRA</span>
+                    <div class="w-full h-full relative flex items-center justify-center py-1">
+                        <div class="wheel-stage">
+                            <div class="wheel-pointer" id="wheel-pointer-${id}" aria-hidden="true">
+                                <svg viewBox="0 0 40 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 50C20 50 2 28.5 2 18C2 8.06 10.06 0 20 0C29.94 0 38 8.06 38 18C38 28.5 20 50 20 50Z" fill="url(#wheelPinGrad-${id})"/>
+                                    <circle cx="20" cy="18" r="7.5" fill="#fff" fill-opacity="0.95"/>
+                                    <circle cx="20" cy="18" r="3.5" fill="#db2777"/>
+                                    <defs>
+                                        <linearGradient id="wheelPinGrad-${id}" x1="20" y1="0" x2="20" y2="50" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#fb7185"/>
+                                            <stop offset="1" stop-color="#9f1239"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <div class="wheel-rim">
+                                <div class="wheel-inner" id="wheel-inner-${id}" data-rotation="0" style="background: conic-gradient(${gradient.join(', ')}); transform: rotate(0deg);">
+                                    ${labelsHTML}
+                                </div>
+                            </div>
+                            <button type="button" class="wheel-hub" id="wheel-hub-${id}" onclick="spinRandomizerWheel('${id}')" title="Snurra hjulet">
+                                <i class="fas fa-sync-alt hub-icon"></i>
+                                <span class="hub-label">SNURRA</span>
+                            </button>
+                            <div class="wheel-result" id="wheel-result-${id}" aria-live="polite">
+                                <div class="wheel-result-badge"><small>ELEV</small><span id="wheel-result-num-${id}">–</span></div>
+                            </div>
                         </div>
                     </div>`;
             } else {
@@ -1335,29 +1546,37 @@
             const wheel = document.getElementById(`wheel-inner-${id}`);
             if (!wheel || wheel.isSpinning) return;
             wheel.isSpinning = true;
-            
+
+            const hub = document.getElementById(`wheel-hub-${id}`);
+            const pointer = document.getElementById(`wheel-pointer-${id}`);
+            const result = document.getElementById(`wheel-result-${id}`);
+            const resultNum = document.getElementById(`wheel-result-num-${id}`);
+            if (hub) hub.classList.add('spinning');
+            if (pointer) pointer.classList.add('ticking');
+            if (result) result.classList.remove('show');
+
             const maxInput = document.getElementById(`rand-max-${id}`);
             const max = parseInt(maxInput.value) || 30;
-            
+
             const currentRotation = parseFloat(wheel.getAttribute('data-rotation')) || 0;
             const targetNumber = Math.floor(Math.random() * max) + 1;
-            
+
             const sliceAngle = 360 / max;
             const targetSliceCenter = (targetNumber - 1) * sliceAngle + sliceAngle / 2;
-            
+
             const spins = 5 * 360;
             const currentMod = currentRotation % 360;
-            const targetRot = spins + (360 - targetSliceCenter); 
-            
+            const targetRot = spins + (360 - targetSliceCenter);
+
             let addedRotation = targetRot - currentMod;
             if(addedRotation < spins) addedRotation += 360;
-            
+
             const offset = (Math.random() - 0.5) * (sliceAngle * 0.7);
             const finalRotation = currentRotation + addedRotation + offset;
-            
+
             wheel.style.transform = `rotate(${finalRotation}deg)`;
             wheel.setAttribute('data-rotation', finalRotation);
-            
+
             const sBtn = document.getElementById(`sound-toggle-${id}`);
             if (sBtn && sBtn.getAttribute('data-sound') === 'on') {
                 try { playWheelSound(); } catch(e) {}
@@ -1365,8 +1584,19 @@
 
             setTimeout(() => {
                 wheel.isSpinning = false;
+                if (hub) hub.classList.remove('spinning');
+                if (pointer) pointer.classList.remove('ticking');
+                if (resultNum) resultNum.textContent = targetNumber;
+                if (result) {
+                    if (hub) hub.style.opacity = '0';
+                    result.classList.add('show');
+                    setTimeout(() => {
+                        result.classList.remove('show');
+                        if (hub) hub.style.opacity = '';
+                    }, 2200);
+                }
                 showStatus(`Elev ${targetNumber} valdes!`, 'success');
-            }, 4000);
+            }, 4200);
         }
 
         function playWheelSound() {
@@ -1385,7 +1615,7 @@
                 gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.1);
                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.0);
                 osc.start(); osc.stop(ctx.currentTime + 1.0);
-            }, 4000);
+            }, 4200);
         }
 
         function playTick(ctx, time) {
